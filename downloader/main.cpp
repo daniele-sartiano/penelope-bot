@@ -3,6 +3,12 @@
 #include <pthread.h>
 #include <curl/curl.h>
 
+// https://stackoverflow.com/questions/9786150/save-curl-content-result-into-a-string-in-c
+static size_t write_data_to_string(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
 
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
 {
@@ -30,6 +36,7 @@ static void *pull_one_url(void *url)
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out_file);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
 
     curl_easy_perform(curl); /* ignores error */
 
