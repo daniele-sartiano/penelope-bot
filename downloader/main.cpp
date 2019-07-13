@@ -50,8 +50,6 @@ static void *pull_one_url(void *url)
 
 int main() {
 
-    std::cout << "Hello, World!" << std::endl;
-
     int NUMT = 3;
     pthread_t tid[NUMT];
     int error;
