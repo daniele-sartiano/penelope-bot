@@ -2,12 +2,14 @@
 A distributed web crawler
 
 
-### compile downloader
+## compile downloader
 
-## dep
+### dependencies
 ```
 libhiredis-dev
 ```
+
+### commands
 
 ```
 cd downloader; mkdir -p build; cd build; cmake ..; make; cd ../..
