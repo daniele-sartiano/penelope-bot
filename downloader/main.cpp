@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <curl/curl.h>
 
+#include <hiredis/hiredis.h>
+
 // https://stackoverflow.com/questions/9786150/save-curl-content-result-into-a-string-in-c
 static size_t write_data_to_string(void *contents, size_t size, size_t nmemb, void *userp)
 {
@@ -48,7 +50,27 @@ static void *pull_one_url(void *url)
 }
 
 
-int main() {
+void test_redis(redisContext *c) {
+
+    redisReply *reply;
+    /* PING server */
+    reply = static_cast<redisReply *>(redisCommand(c, "PING"));
+    printf("PING: %s\n", reply->str);
+    freeReplyObject(reply);
+
+
+    /* Set a key */
+    reply = static_cast<redisReply *>(redisCommand(c, "SET %s %s", "foo", "hello world"));
+    printf("SET: %s\n", reply->str);
+    freeReplyObject(reply);
+
+    /* Try a GET and two INCR */
+    reply = static_cast<redisReply *>(redisCommand(c, "GET foo"));
+    printf("GET foo: %s\n", reply->str);
+    freeReplyObject(reply);
+}
+
+int main(int argc, char **argv) {
 
     int NUMT = 3;
     pthread_t tid[NUMT];
@@ -59,6 +81,27 @@ int main() {
             "www.repubblica.it",
             "www.corriere.it"
     };
+
+
+    redisContext *c;
+
+    const char *hostname = "127.0.0.1";
+    int port = 6379;
+
+    struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+    c = redisConnectWithTimeout(hostname, port, timeout);
+
+    if (c == NULL || c->err) {
+        if (c) {
+            printf("Connection error: %s\n", c->errstr);
+            redisFree(c);
+        } else {
+            printf("Connection error: can't allocate redis context\n");
+        }
+        exit(1);
+    }
+
+    test_redis(c);
 
     curl_global_init(CURL_GLOBAL_ALL);
 

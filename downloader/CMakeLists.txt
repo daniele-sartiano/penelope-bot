@@ -28,3 +28,4 @@ add_executable(downloader main.cpp)
 
 TARGET_LINK_LIBRARIES(downloader ${CMAKE_THREAD_LIBS_INIT})
 TARGET_LINK_LIBRARIES(downloader ${CURL_LIBRARIES})
+TARGET_LINK_LIBRARIES(downloader ${HIREDIS_LIBRARIES})
