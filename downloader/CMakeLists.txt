@@ -24,7 +24,7 @@ endif(CURL_FOUND)
 
 find_package(hiredis REQUIRED)
 
-add_executable(downloader main.cpp)
+add_executable(downloader main.cpp src/QueueManager.cpp src/QueueManager.h src/Downloader.cpp src/Downloader.h)
 
 TARGET_LINK_LIBRARIES(downloader ${CMAKE_THREAD_LIBS_INIT})
 TARGET_LINK_LIBRARIES(downloader ${CURL_LIBRARIES})
