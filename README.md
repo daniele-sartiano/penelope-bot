@@ -1,4 +1,4 @@
-# spaghetti-bot
+# penelope-bot
 A distributed web crawler
 
 
