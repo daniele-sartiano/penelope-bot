@@ -6,7 +6,8 @@ A distributed web crawler
 
 ### dependencies
 ```
-libhiredis-dev
+libhiredis-dev librdkafka-dev
+
 ```
 
 ### commands
