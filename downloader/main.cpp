@@ -54,7 +54,7 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
 static void *get_url() {
     const char *hostname = "127.0.0.1";
     int port = 6379;
-    auto *q = new QueueManager(port, hostname, 1, 500000);
+    auto *q = new RedisQueueManager(port, hostname, 1, 500000);
     q->get("domain2crawl");
 }
 
@@ -79,10 +79,10 @@ static void *get_url() {
 }*/
 
 
-void test_init_queue() {
+void test_init_redis_queue() {
     const char *hostname = "127.0.0.1";
     int port = 6379;
-    auto *q = new QueueManager(port, hostname, 1, 500000);
+    auto *q = new RedisQueueManager(port, hostname, 1, 500000);
 
     const char * const urls[] = {
             "www.sartiano.info",
@@ -96,10 +96,20 @@ void test_init_queue() {
     }
 }
 
+void test_init_kafka_queue() {
+    const char *hostname = "127.0.0.1:9092";
+    auto *q = new KafkaQueueManager(hostname);
+
+
+
+}
+
 int main(int argc, char **argv) {
 
+    test_init_kafka_queue();
+    return 0;
 
-    test_init_queue();
+    test_init_redis_queue();
 
 
     int NUMT = 3;
@@ -136,21 +146,6 @@ int main(int argc, char **argv) {
 */
 
     curl_global_init(CURL_GLOBAL_ALL);
-
-/*
-    for (int i=0; i<NUMT; i++) {
-        error = pthread_create(
-                &tid[i],
-                NULL,
-                pull_one_url,
-                (void*)urls[i]);
-        if (0 != error) {
-            fprintf(stderr, "Could't run thread number %d, errno %d\n", i, error);
-        } else {
-            fprintf(stderr,  "Thread %d,  gets %s\n", i, urls[i]);
-        }
-    }
-*/
 
     for (int i=0; i<NUMT; i++) {
         error = pthread_create(
