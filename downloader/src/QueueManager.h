@@ -10,8 +10,8 @@
 #include <librdkafka/rdkafkacpp.h>
 
 class QueueManager {
-    virtual void set(const char *key, const char *message) const = 0;
-    virtual void get(const char *key) const = 0;
+    virtual void set(const char *key, const char *message) = 0;
+    virtual void get(const char *key) = 0;
 
 };
 
@@ -22,8 +22,8 @@ public:
         struct timeval timeout = { sec, usec }; // 1.5 seconds
         context = redisConnectWithTimeout(hostname, port, timeout);
     }
-    void set(const char *key, const char *message) const override;
-    void get(const char *key) const override;
+    void set(const char *key, const char *message) override;
+    void get(const char *key) override;
 
 };
 
@@ -32,6 +32,7 @@ class KafkaQueueManager : public QueueManager {
     RdKafka::Conf *conf;
     RdKafka::Conf *tconf;
     RdKafka::Producer *producer;
+    RdKafka::Consumer *consumer;
 public:
     KafkaQueueManager(const char *brokers) {
         std::string errstr;
@@ -43,16 +44,13 @@ public:
         printf("Kafka builtin Features %s\n", features.c_str());
 
         conf->set("metadata.broker.list", brokers, errstr);
-
-
-
     }
-
     void set(const char *key, const char *message) override;
-    void get(const char *key) const override;
+    void get(const char *key) override;
 
 private:
-    RdKafka::Producer * get_producer();
+    RdKafka::Producer *get_producer();
+    RdKafka::Consumer *get_consumer();
 };
 
 #endif //DOWNLOADER_QUEUEMANAGER_H

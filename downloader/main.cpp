@@ -51,7 +51,7 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
 }*/
 
 
-static void *get_url() {
+static void *redis_get_url() {
     const char *hostname = "127.0.0.1";
     int port = 6379;
     auto *q = new RedisQueueManager(port, hostname, 1, 500000);
@@ -100,16 +100,28 @@ void test_init_kafka_queue() {
     const char *hostname = "127.0.0.1:9092";
     auto *q = new KafkaQueueManager(hostname);
 
+    const char * const urls[] = {
+            "www.sartiano.info",
+            "www.repubblica.it",
+            "www.corriere.it"
+    };
 
+    for (const char *url: urls) {
+        q->set("domain2crawl", url);
+    }
+}
 
+static void *kafka_get_url() {
+    const char *hostname = "127.0.0.1:9092";
+    auto *q = new KafkaQueueManager(hostname);
+    q->get("domain2crawl");
 }
 
 int main(int argc, char **argv) {
 
     test_init_kafka_queue();
-    return 0;
 
-    test_init_redis_queue();
+    //test_init_redis_queue();
 
 
     int NUMT = 3;
@@ -151,7 +163,7 @@ int main(int argc, char **argv) {
         error = pthread_create(
                 &tid[i],
                 nullptr,
-                reinterpret_cast<void *(*)(void *)>(get_url),
+                reinterpret_cast<void *(*)(void *)>(kafka_get_url()),
                 nullptr);
         if (0 != error) {
             fprintf(stderr, "Could't run thread number %d, errno %d\n", i, error);
