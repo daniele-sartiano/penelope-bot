@@ -6,10 +6,13 @@
 #include <hiredis/hiredis.h>
 #include "src/QueueManager.h"
 #include "src/KafkaReader.h"
+#include "src/NatsProducer.h"
+#include "src/NatsReceiver.h"
 
 #include <librdkafka/rdkafka.h>
 #include <unistd.h>
 #include <nats/nats.h>
+#include <cstring>
 
 /*// https://stackoverflow.com/questions/9786150/save-curl-content-result-into-a-string-in-c
 static size_t write_data_to_string(void *contents, size_t size, size_t nmemb, void *userp)
@@ -142,147 +145,31 @@ static void *download_url() {
     q->get("domain2crawl");
 }
 
+static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure) {
+    printf("Received msg: %s - %.*s\n",
+           natsMsg_GetSubject(msg),
+           natsMsg_GetDataLength(msg),
+           natsMsg_GetData(msg));
+
+    // Need to destroy the message!
+    natsMsg_Destroy(msg);
+}
+
 int main(int argc, char **argv) {
-    natsConnection      *conn = NULL;
-    natsStatus          s;
+    std::vector<std::string> urls;
+    urls.emplace_back("www.sartiano.info");
+    urls.emplace_back("www.repubblica.it");
+    urls.emplace_back("www.corriere.it");
 
-    printf("Publishes a message on subject 'foo'\n");
+    auto *producer = new NatsProducer("nats://127.0.0.1:4222");
 
-    // Creates a connection to the default NATS URL
-    s = natsConnection_ConnectTo(&conn, "nats://127.0.0.1:4222");
-    if (s == NATS_OK)
-    {
-        const char data[] = {104, 101, 108, 108, 111, 33};
-
-        // Publishes the sequence of bytes on subject "foo".
-        s = natsConnection_Publish(conn, "foo", data, sizeof(data));
+    for (int i=0; i<100000; i++) {
+        producer->send("foo", urls);
     }
 
-    // Anything that is created need to be destroyed
-    natsConnection_Destroy(conn);
+    auto *receiver = new NatsReceiver("nats://127.0.0.1:4222");
 
-    // If there was an error, print a stack trace and exit
-    if (s != NATS_OK)
-    {
-        nats_PrintLastErrorStack(stderr);
-        exit(2);
-    }
-
-    return 0;
-}
-
-int main3(int argc, char **argv) {
-    int NUMT = 3;
-    pthread_t tid[NUMT];
-    int error;
-
-    /*for (int n=0; n<100; n++) {
-        create_producer();
-    }*/
-
-    /*std::vector<std::string> topics;
-    topics.emplace_back("domain2crawl");
-    auto *kr = new KafkaReader("127.0.0.1:9092", "0", topics);
-    int r = 0;
-    while(r < 10) {
-        std::cout << " r is " << r << std::endl;
-        for (RdKafka::Message *msg : kr->get()) {
-            std::cout << "data --> " << msg->payload() << std::endl;
-        }
-
-        r++;
-    }*/
-
-    curl_global_init(CURL_GLOBAL_ALL);
-
-    for (int i=0; i<NUMT; i++) {
-        fprintf(stderr, "OK\n");
-        error = pthread_create(
-                &tid[i],
-                nullptr,
-                reinterpret_cast<void *(*)(void *)>(kafka_get_url),
-                reinterpret_cast<void *>(i));
-        std::cout << error << std::endl;
-        if (0 != error) {
-            fprintf(stderr, "Could't run thread number %d, errno %d\n", i, error);
-        } else {
-            //fprintf(stderr,  "Thread %d,  gets %s\n", i, urls[i]);
-            fprintf(stderr,  "Thread %d started\n", i);
-        }
-    }
-
-    /* now wait for all threads to terminate */
-    for(int i=0; i< NUMT; i++) {
-        error = pthread_join(tid[i], nullptr);
-        fprintf(stderr, "Thread %d terminated\n", i);
-    }
-
-    return 0;
-
-}
-
-int main2(int argc, char **argv) {
-
-    test_init_kafka_queue();
-
-    //test_init_redis_queue();
-
-
-    int NUMT = 3;
-    pthread_t tid[NUMT];
-    int error;
-
-    /*const char * const urls[] = {
-            "www.sartiano.info",
-            "www.repubblica.it",
-            "www.corriere.it"
-    };*/
-
-
-/*
-    redisContext *c;
-
-    const char *hostname = "127.0.0.1";
-    int port = 6379;
-
-    struct timeval timeout = { 1, 500000 }; // 1.5 seconds
-    c = redisConnectWithTimeout(hostname, port, timeout);
-
-    if (c == NULL || c->err) {
-        if (c) {
-            printf("Connection error: %s\n", c->errstr);
-            redisFree(c);
-        } else {
-            printf("Connection error: can't allocate redis context\n");
-        }
-        exit(1);
-    }
-
-    test_redis(c);
-*/
-
-    curl_global_init(CURL_GLOBAL_ALL);
-
-    /*for (int i=0; i<NUMT; i++) {
-        fprintf(stderr, "OK");
-        error = pthread_create(
-                &tid[i],
-                nullptr,
-                reinterpret_cast<void *(*)(void *)>(kafka_get_url(i)),
-                nullptr);
-        if (0 != error) {
-            fprintf(stderr, "Could't run thread number %d, errno %d\n", i, error);
-        } else {
-            //fprintf(stderr,  "Thread %d,  gets %s\n", i, urls[i]);
-            fprintf(stderr,  "Thread %d started\n", i);
-        }
-    }*/
-
-    /* now wait for all threads to terminate */
-    for(int i=0; i< NUMT; i++) {
-        error = pthread_join(tid[i], nullptr);
-        fprintf(stderr, "Thread %d terminated\n", i);
-    }
+    receiver->subscribe("foo", onMsg);
 
     return 0;
 }

@@ -1,7 +1,9 @@
-nats c client dependencies
+# nats c client dependencies
 
-sudo apt install libprotobuf-dev protobuf-compiler libprotoc-dev
+Reference: https://github.com/nats-io/nats.c
 
-# install
+```sudo apt install libprotobuf-dev protobuf-compiler libprotoc-dev```
+
+### local installation
 https://github.com/protobuf-c/protobuf-c
 

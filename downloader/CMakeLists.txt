@@ -54,14 +54,10 @@ find_package(hiredis REQUIRED)
 
 find_package(rdkafka REQUIRED)
 
-add_executable(downloader main.cpp src/QueueManager.cpp src/QueueManager.h src/Downloader.cpp src/Downloader.h src/KafkaReader.cpp src/KafkaReader.h)
-
-add_executable(test_producer tests/kafka_test.cpp)
+add_executable(downloader main.cpp src/QueueManager.cpp src/QueueManager.h src/Downloader.cpp src/Downloader.h src/KafkaReader.cpp src/KafkaReader.h src/NatsProducer.cpp src/NatsProducer.h src/NatsReceiver.cpp src/NatsReceiver.h)
 
 TARGET_LINK_LIBRARIES(downloader ${CMAKE_THREAD_LIBS_INIT})
 TARGET_LINK_LIBRARIES(downloader ${CURL_LIBRARIES})
 TARGET_LINK_LIBRARIES(downloader ${HIREDIS_LIBRARIES})
 TARGET_LINK_LIBRARIES(downloader ${RDKAFKA_LIBRARIES})
 TARGET_LINK_LIBRARIES(downloader NatsCClientLib)
-
-TARGET_LINK_LIBRARIES(test_producer ${RDKAFKA_LIBRARIES})
