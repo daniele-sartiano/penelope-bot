@@ -5,6 +5,7 @@
 #include <curl/curl.h>
 #include <string>
 #include <fstream>
+#include <iostream>
 #include "Downloader.h"
 
 size_t Downloader::write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
@@ -15,12 +16,17 @@ size_t Downloader::write_data(void *ptr, size_t size, size_t nmemb, void *stream
     return size*nmemb;
 }
 
-void Downloader::download() {
+void Downloader::download(std::string &directory) {
     CURL *curl;
+    std::string file_name;
+    std::string prefix = !directory.empty() ? directory.append("/") : "";
+    file_name.append(prefix);
+    file_name.append("page.");
 
-    std::string file_name = "page.";
     file_name.append(this->url);
     file_name.append(".out");
+
+    std::cout << "filename --> " << file_name << std::endl;
 
     std::ofstream out_file;
     out_file.open(file_name);

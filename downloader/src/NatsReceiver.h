@@ -21,7 +21,8 @@ public:
         }
     }
 
-    void subscribe(const std::string &subject, void (*f)(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure));
+    void subscribe(const std::string &subject, void (*f)(natsConnection *, natsSubscription *, natsMsg *, void *),
+                   void * closure);
 private:
     natsConnection *conn;
 };

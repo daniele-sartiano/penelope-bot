@@ -9,11 +9,11 @@
 class Downloader {
     const char *url;
     static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
-    void download();
+    void download(std::string &directory);
 public:
-    Downloader(const char *url) {
+    Downloader(const char *url, std::string directory= nullptr) {
         this->url = url;
-        download();
+        download(directory);
     }
 };
 

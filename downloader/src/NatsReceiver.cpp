@@ -4,10 +4,10 @@
 
 #include "NatsReceiver.h"
 
-void NatsReceiver::subscribe(const std::string &subject, void (*f)(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure)) {
+void NatsReceiver::subscribe(const std::string &subject, void (*f)(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure), void *clos) {
     natsStatus s;
     natsSubscription *sub  = nullptr;
-    s = natsConnection_Subscribe(&sub, this->conn, subject.c_str(), f, nullptr);
+    s = natsConnection_Subscribe(&sub, this->conn, subject.c_str(), f, clos);
     if (s != NATS_OK) {
         nats_PrintLastErrorStack(stderr);
         exit(2);
