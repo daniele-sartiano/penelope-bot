@@ -5,7 +5,6 @@
 #include <nats/nats.h>
 #include <getopt.h>
 #include <iostream>
-#include <cstring>
 
 static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure) {
     printf("Received msg: %s - %.*s\n",
