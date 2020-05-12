@@ -53,7 +53,8 @@ int main(int argc, char **argv) {
         producer->send("foo", urls);
     }*/
 
-    auto *receiver = new NatsReceiver("nats://127.0.0.1:4222");
+    std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
+    auto *receiver = new NatsReceiver(server);
 
     std::string subject = getenv("SUBJECT") != nullptr ? getenv("SUBJECT") : "url";
 
