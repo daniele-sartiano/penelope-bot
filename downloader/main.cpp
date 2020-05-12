@@ -8,6 +8,7 @@
 #include "src/KafkaReader.h"
 #include "src/NatsProducer.h"
 #include "src/NatsReceiver.h"
+#include "src/Downloader.h"
 
 #include <librdkafka/rdkafka.h>
 #include <unistd.h>
@@ -151,12 +152,14 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
            natsMsg_GetDataLength(msg),
            natsMsg_GetData(msg));
 
+    Downloader(natsMsg_GetData(msg));
+
     // Need to destroy the message!
     natsMsg_Destroy(msg);
 }
 
 int main(int argc, char **argv) {
-    std::vector<std::string> urls;
+    /*std::vector<std::string> urls;
     urls.emplace_back("www.sartiano.info");
     urls.emplace_back("www.repubblica.it");
     urls.emplace_back("www.corriere.it");
@@ -165,7 +168,7 @@ int main(int argc, char **argv) {
 
     for (int i=0; i<100000; i++) {
         producer->send("foo", urls);
-    }
+    }*/
 
     auto *receiver = new NatsReceiver("nats://127.0.0.1:4222");
 

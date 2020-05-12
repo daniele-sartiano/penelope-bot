@@ -23,8 +23,8 @@ async def run(loop):
                      max_reconnect_attempts=-1,
                      loop=loop)
 
-    for i in range(10000):
-        await nc.publish("foo", "{} message".format(i).encode('utf-8'));
+    for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
+        await nc.publish("foo", url.encode('utf-8'));
 
     await nc.close()
 
