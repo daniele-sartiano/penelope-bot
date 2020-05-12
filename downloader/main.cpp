@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
     std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
     auto *receiver = new NatsReceiver(server);
 
-    std::string subject = getenv("SUBJECT") != nullptr ? getenv("SUBJECT") : "url";
-    std::string queue = getenv("QUEUE") != nullptr ? getenv("QUEUE") : "url";
+    std::string subject = getenv("SUBJECT") != nullptr ? getenv("SUBJECT") : "downloader";
+    std::string queue = getenv("QUEUE") != nullptr ? getenv("QUEUE") : "qdownloader";
 
     std::cout << "subject " << subject << std::endl;
 
