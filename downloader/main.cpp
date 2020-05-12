@@ -57,10 +57,11 @@ int main(int argc, char **argv) {
     auto *receiver = new NatsReceiver(server);
 
     std::string subject = getenv("SUBJECT") != nullptr ? getenv("SUBJECT") : "url";
+    std::string queue = getenv("QUEUE") != nullptr ? getenv("QUEUE") : "url";
 
     std::cout << "subject " << subject << std::endl;
 
-    receiver->subscribe(subject, onMsg, static_cast<void*>(&directory));
+    receiver->subscribe(subject, queue, onMsg, static_cast<void*>(&directory));
 
     return 0;
 }

@@ -28,6 +28,7 @@ services:
       - nats-2
     environment:
       - SUBJECT=downloader
+      - QUEUE=qdownloader
       - NATS_URI=nats://nats:4222
 
 volumes:
