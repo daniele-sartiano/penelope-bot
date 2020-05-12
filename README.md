@@ -1,12 +1,13 @@
 # penelope-bot
-A distributed web crawler
+A distributed web crawler based on nats.io
 
 
 ## compile downloader
 
 ### dependencies
 ```
-libhiredis-dev librdkafka-dev
+libprotobuf-dev protobuf-compiler libprotoc-dev
+https://github.com/protobuf-c/protobuf-c
 
 ```
 
