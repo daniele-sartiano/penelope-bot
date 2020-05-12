@@ -1,3 +1,0 @@
-sudo apt-get install libprotobuf-dev protobuf-compiler libprotoc-dev
-# install
-https://github.com/protobuf-c/protobuf-c
