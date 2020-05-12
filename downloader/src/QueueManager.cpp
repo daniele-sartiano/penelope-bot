@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <sys/time.h>
 #include "QueueManager.h"
 #include "Downloader.h"
 
@@ -39,10 +40,10 @@ RdKafka::Producer * KafkaQueueManager::get_producer() {
     return this->producer;
 }
 
-RdKafka::Consumer *KafkaQueueManager::get_consumer() {
+RdKafka::KafkaConsumer *KafkaQueueManager::get_consumer() {
     std::string errstr;
     if (!this->consumer) {
-        this->consumer = RdKafka::Consumer::create(this->conf, errstr);
+        this->consumer = RdKafka::KafkaConsumer::create(this->conf, errstr);
         if (!this->consumer) {
             std::cerr << "Failed to create consumer: " << errstr << std::endl;
             exit(1);
@@ -78,13 +79,47 @@ void KafkaQueueManager::get(const char *key) {
     std::string errstr;
     printf("Kafka GET\n");
     auto *consumer = this->get_consumer();
-    printf("Consumer ok\n");
-    RdKafka::Topic *topic = RdKafka::Topic::create(consumer, std::string(key), this->conf, errstr);
+    std::cout << "Created consumer" << std::endl;
+    std::cout << "Trying to create Topic with " << key << std::endl;
+
+    const std::vector<std::string> topics{std::string(key)};
+    RdKafka::ErrorCode err = consumer->subscribe(topics);
+
+    if (err) {
+        std::cerr << "Failed to subscribe to " << topics.size() << " topics: "
+                  << RdKafka::err2str(err) << std::endl;
+        exit(1);
+    }
+    int run = 1;
+    while (run) {
+        RdKafka::Message *msg = consumer->consume(3000);
+
+        switch (msg->err()) {
+            case RdKafka::ERR__TIMED_OUT:
+                //std::cerr << RdKafka::version_str().c_str() << " - " << RdKafka::version() << std::endl;
+                std::cerr << "%% Consumer timeout: " << msg->errstr() << std::endl;
+                delete msg;
+                break;
+
+            case RdKafka::ERR_NO_ERROR:
+                std::cerr << "Received " << static_cast<const char*>(msg->payload()) << std::endl;
+                break;
+
+            default:
+                std::cerr << "%% Consumer error: " << msg->errstr() << std::endl;
+                run = 0;
+        }
+    }
+
+    /*RdKafka::Topic *topic = RdKafka::Topic::create(consumer, std::string(key), this->tconf, errstr);
+
+    std::cerr << errstr << std::endl;
+    std::cout << "Topic created" << std::endl;
     if (!topic) {
         std::cerr << "Failed to create topic: " << errstr << std::endl;
         exit(1);
     }
-    printf("Consumer ok\n");
+    printf("Consumer 2 ok\n");
     RdKafka::ErrorCode resp = consumer->start(topic, RdKafka::Topic::PARTITION_UA, RdKafka::Topic::OFFSET_BEGINNING);
     if (resp != RdKafka::ERR_NO_ERROR) {
         std::cerr << "Failed to start consumer: " << RdKafka::err2str(resp) << std::endl;
@@ -92,11 +127,28 @@ void KafkaQueueManager::get(const char *key) {
     }
 
     std::cerr << "Consumer created" << std::endl;
-    
-    while (true) {
+    int run = 1;
+    while (run) {
         RdKafka::Message *msg = consumer->consume(topic, RdKafka::Topic::PARTITION_UA, 1000);
-        std::cerr << "Consumed" << msg->payload() << std::endl;
+
+        switch (msg->err()) {
+            case RdKafka::ERR__TIMED_OUT:
+                std::cerr << "timeout" << std::endl;
+                break;
+            case RdKafka::ERR_NO_ERROR:
+                std::cout << "Read msg at offset " << msg->offset() << std::endl;
+                std::cout << "Consumed " << static_cast<const char*>(msg->payload()) << " " << msg->errstr() << std::endl;
+                break;
+            case RdKafka::ERR__PARTITION_EOF:
+            case RdKafka::ERR__UNKNOWN_TOPIC:
+            case RdKafka::ERR__UNKNOWN_PARTITION:
+            default:
+                *//* Errors *//*
+                std::cerr << "Consume failed: " << msg->errstr() << std::endl;
+                run = 0;
+        }
         delete msg;
         consumer->poll(0);
-    }
+
+    }*/
 }
