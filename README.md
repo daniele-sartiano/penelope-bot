@@ -1,7 +1,17 @@
 # penelope-bot
 A distributed web crawler
 
-### compile downloader
+
+## compile downloader
+
+### dependencies
+```
+libhiredis-dev librdkafka-dev
+
+```
+
+### commands
+
 ```
 cd downloader; mkdir -p build; cd build; cmake ..; make; cd ../..
 ```

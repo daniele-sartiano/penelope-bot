@@ -10,3 +10,6 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 cmake-build-debug
+3rdparty
+output
+cmake-build-release

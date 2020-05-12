@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+
+include(ExternalProject)
+
 project(downloader)
 
 set(CMAKE_CXX_STANDARD 14)
 
-find_package(Threads)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+find_package(Threads REQUIRED)
 if(THREADS_FOUND)
     message(STATUS "Threads libraries found at: ${THREADS_LIBRARIES}")
     message(STATUS "Threads includes found at: ${THREADS_INCLUDE_DIRS}")
@@ -11,8 +18,7 @@ else()
     message(SEND_ERROR "Could not find Threads on your system")
 endif(THREADS_FOUND)
 
-
-find_package(CURL)
+find_package(CURL REQUIRED)
 if(CURL_FOUND)
     message(STATUS "Curl libraries found at: ${CURL_LIBRARIES}")
     message(STATUS "Curl includes found at: ${CURL_INCLUDE_DIRS}")
@@ -20,7 +26,38 @@ else()
     message(SEND_ERROR "Could not find cURL on your system")
 endif(CURL_FOUND)
 
-add_executable(downloader main.cpp)
+#########################################################################
+# Nats C Client
+
+ExternalProject_Add(
+        NatsCClient
+
+        GIT_REPOSITORY "https://github.com/nats-io/nats.c.git"
+        GIT_TAG "master"
+
+        UPDATE_COMMAND ""
+        PATCH_COMMAND ""
+
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/natsc"
+        CMAKE_ARGS -DBuildShared=ON -DBuildExamples=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+)
+
+ExternalProject_Get_property(NatsCClient install_dir)
+include_directories(${install_dir}/include)
+add_library(NatsCClientLib UNKNOWN IMPORTED)
+set_target_properties(NatsCClientLib PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/libnats.so)
+add_dependencies(NatsCClientLib NatsCClient)
+
+#########################################################################
+
+find_package(hiredis REQUIRED)
+
+find_package(rdkafka REQUIRED)
+
+add_executable(downloader main.cpp src/QueueManager.cpp src/QueueManager.h src/Downloader.cpp src/Downloader.h src/KafkaReader.cpp src/KafkaReader.h src/NatsProducer.cpp src/NatsProducer.h src/NatsReceiver.cpp src/NatsReceiver.h)
 
 TARGET_LINK_LIBRARIES(downloader ${CMAKE_THREAD_LIBS_INIT})
 TARGET_LINK_LIBRARIES(downloader ${CURL_LIBRARIES})
+TARGET_LINK_LIBRARIES(downloader ${HIREDIS_LIBRARIES})
+TARGET_LINK_LIBRARIES(downloader ${RDKAFKA_LIBRARIES})
+TARGET_LINK_LIBRARIES(downloader NatsCClientLib)

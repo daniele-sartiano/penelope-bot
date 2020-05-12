@@ -1,85 +1,65 @@
+#include <hiredis/hiredis.h>
+#include "src/NatsReceiver.h"
+#include "src/Downloader.h"
+
+#include <nats/nats.h>
+#include <getopt.h>
 #include <iostream>
-#include <fstream>
-#include <pthread.h>
-#include <curl/curl.h>
 
-// https://stackoverflow.com/questions/9786150/save-curl-content-result-into-a-string-in-c
-static size_t write_data_to_string(void *contents, size_t size, size_t nmemb, void *userp)
-{
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
-    return size * nmemb;
+static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure) {
+    printf("Received msg: %s - %.*s\n",
+           natsMsg_GetSubject(msg),
+           natsMsg_GetDataLength(msg),
+           natsMsg_GetData(msg));
+
+    std::string &directory = *(static_cast<std::string*>(closure));
+
+    std::cout << "directory -> " << directory << std::endl;
+
+    Downloader(natsMsg_GetData(msg), directory);
+
+    // Need to destroy the message!
+    natsMsg_Destroy(msg);
 }
 
-static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
-{
-    std::ofstream& outstream = *reinterpret_cast<std::ofstream*>(stream);
-    outstream.write((const char*)ptr, size * nmemb);
+int main(int argc, char **argv) {
 
-    //size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
-    return size*nmemb;
-}
+    int opt;
+    std::string directory;
 
-
-static void *pull_one_url(void *url)
-{
-    CURL *curl;
-
-    std::string file_name = "page.";
-    file_name.append((char*)url);
-    file_name.append(".out");
-
-    std::ofstream out_file;
-    out_file.open(file_name);
-
-    curl = curl_easy_init();
-
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out_file);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
-
-    curl_easy_perform(curl); /* ignores error */
-
-    out_file.close();
-
-    curl_easy_cleanup(curl);
-
-    return NULL;
-}
-
-
-int main() {
-
-    int NUMT = 3;
-    pthread_t tid[NUMT];
-    int error;
-
-    const char * const urls[] = {
-            "www.sartiano.info",
-            "www.repubblica.it",
-            "www.corriere.it"
-    };
-
-    curl_global_init(CURL_GLOBAL_ALL);
-
-    for (int i=0; i<NUMT; i++) {
-        error = pthread_create(
-                &tid[i],
-                NULL,
-                pull_one_url,
-                (void*)urls[i]);
-        if (0 != error) {
-            fprintf(stderr, "Could't run thread number %d, errno %d\n", i, error);
-        } else {
-            fprintf(stderr,  "Thread %d,  gets %s\n", i, urls[i]);
+    while((opt = getopt(argc, argv, "d:")) != -1)
+    {
+        switch(opt)
+        {
+            case 'd':
+                printf("downloader directory: %s\n", optarg);
+                directory = optarg;
+                std::cout << directory << std::endl;
+                break;
+            case '?':
+                printf("unknown option: %c\n", optopt);
+                break;
         }
     }
 
-    /* now wait for all threads to terminate */
-    for(int i=0; i< NUMT; i++) {
-        error = pthread_join(tid[i], NULL);
-        fprintf(stderr, "Thread %d terminated\n", i);
-    }
+    /*std::vector<std::string> urls;
+    urls.emplace_back("www.sartiano.info");
+    urls.emplace_back("www.repubblica.it");
+    urls.emplace_back("www.corriere.it");
+
+    auto *producer = new NatsProducer("nats://127.0.0.1:4222");
+
+    for (int i=0; i<100000; i++) {
+        producer->send("foo", urls);
+    }*/
+
+    auto *receiver = new NatsReceiver("nats://127.0.0.1:4222");
+
+    std::string subject = getenv("SUBJECT") != nullptr ? getenv("SUBJECT") : "url";
+
+    std::cout << "subject " << subject << std::endl;
+
+    receiver->subscribe(subject, onMsg, static_cast<void*>(&directory));
 
     return 0;
 }
