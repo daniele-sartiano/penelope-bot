@@ -32,6 +32,27 @@ set_target_properties(LexborLib PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/
 add_dependencies(LexborLib Lexbor)
 
 #########################################################################
+# Nats C Client
+
+ExternalProject_Add(
+        NatsCClient
+
+        GIT_REPOSITORY "https://github.com/nats-io/nats.c.git"
+        GIT_TAG "master"
+
+        UPDATE_COMMAND ""
+        PATCH_COMMAND ""
+
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/natsc"
+        CMAKE_ARGS -DBuildShared=ON -DBuildExamples=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+)
+
+ExternalProject_Get_property(NatsCClient install_dir)
+include_directories(${install_dir}/include)
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty/natsc/src)
+add_library(NatsCClientLib UNKNOWN IMPORTED)
+set_target_properties(NatsCClientLib PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/libnats.so)
+add_dependencies(NatsCClientLib NatsCClient)
 
 #########################################################################
 # GumboParser
@@ -56,8 +77,17 @@ set_target_properties(GumboParserLib PROPERTIES IMPORTED_LOCATION ${install_dir}
 add_dependencies(GumboParserLib GumboParser)
 
 #########################################################################
+# Common lib
+include_directories(${CMAKE_SOURCE_DIR}/common/include)
+LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/common)
+add_library(libcommon SHARED IMPORTED)
+set_property(TARGET libcommon PROPERTY IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/common/libcommon.so")
+
+#########################################################################
 
 add_executable(parser main.cpp src/Parser.cpp src/Parser.h)
 
 TARGET_LINK_LIBRARIES(parser LexborLib)
 TARGET_LINK_LIBRARIES(parser GumboParserLib)
+TARGET_LINK_LIBRARIES(parser NatsCClientLib)
+TARGET_LINK_LIBRARIES(parser libcommon)
