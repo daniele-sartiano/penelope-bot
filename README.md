@@ -2,7 +2,7 @@
 A distributed web crawler based on nats.io
 
 
-## compile downloader
+## compile downloader locally
 
 ### dependencies
 ```
@@ -18,3 +18,8 @@ cd downloader; mkdir -p build; cd build; cmake ..; make; cd ../..
 ```
 
 
+### Build
+
+```
+docker-compose up --scale downloader=3
+```

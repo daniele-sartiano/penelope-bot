@@ -27,10 +27,8 @@ int main(int argc, char **argv) {
     int opt;
     std::string directory;
 
-    while((opt = getopt(argc, argv, "d:")) != -1)
-    {
-        switch(opt)
-        {
+    while((opt = getopt(argc, argv, "d:")) != -1) {
+        switch(opt) {
             case 'd':
                 printf("downloader directory: %s\n", optarg);
                 directory = optarg;
