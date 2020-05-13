@@ -4,6 +4,7 @@ project(common)
 set(CMAKE_CXX_STANDARD 14)
 
 include(ExternalProject)
+include(GNUInstallDirs)
 
 #########################################################################
 # Nats C Client
@@ -29,6 +30,18 @@ set_target_properties(NatsCClientLib PROPERTIES IMPORTED_LOCATION ${install_dir}
 add_dependencies(NatsCClientLib NatsCClient)
 
 #########################################################################
+set(common_SRC src/natscommunication.cpp)
+set(common_HDR src/natscommunication.h)
 
-add_library(common SHARED src/natscommunication.cpp src/natscommunication.h)
+add_library(common SHARED ${common_SRC} ${common_HDR})
 target_link_libraries(common NatsCClientLib)
+
+set_target_properties(common PROPERTIES PUBLIC_HEADER src/natscommunication.h)
+target_include_directories(common PUBLIC src)
+
+install(TARGETS common
+        EXPORT common
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/common)
+
+
