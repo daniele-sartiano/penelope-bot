@@ -49,15 +49,29 @@ set_target_properties(NatsCClientLib PROPERTIES IMPORTED_LOCATION ${install_dir}
 add_dependencies(NatsCClientLib NatsCClient)
 
 #########################################################################
+# Common lib
+include_directories(${CMAKE_SOURCE_DIR}/common/include)
+LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/common)
+add_library(libcommon SHARED IMPORTED)
+set_property(TARGET libcommon PROPERTY IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/common/libcommon.so")
 
+#########################################################################
 find_package(hiredis REQUIRED)
 
 find_package(rdkafka REQUIRED)
 
-add_executable(downloader main.cpp src/QueueManager.cpp src/QueueManager.h src/Downloader.cpp src/Downloader.h src/KafkaReader.cpp src/KafkaReader.h src/NatsProducer.cpp src/NatsProducer.h src/NatsReceiver.cpp src/NatsReceiver.h)
+#[[
+ADD_LIBRARY( NatsCommunicationLib STATIC
+        src/NatsProducer.cpp src/NatsProducer.h src/NatsReceiver.cpp src/NatsReceiver.h )
+TARGET_LINK_LIBRARIES(NatsCommunicationLib NatsCClientLib)
+]]
+
+add_executable(downloader main.cpp src/QueueManager.cpp src/QueueManager.h src/Downloader.cpp src/Downloader.h src/KafkaReader.cpp src/KafkaReader.h)
 
 TARGET_LINK_LIBRARIES(downloader ${CMAKE_THREAD_LIBS_INIT})
 TARGET_LINK_LIBRARIES(downloader ${CURL_LIBRARIES})
 TARGET_LINK_LIBRARIES(downloader ${HIREDIS_LIBRARIES})
 TARGET_LINK_LIBRARIES(downloader ${RDKAFKA_LIBRARIES})
 TARGET_LINK_LIBRARIES(downloader NatsCClientLib)
+TARGET_LINK_LIBRARIES(downloader libcommon)
+#TARGET_LINK_LIBRARIES(downloader NatsCommunicationLib)

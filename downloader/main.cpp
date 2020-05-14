@@ -1,8 +1,8 @@
 #include <hiredis/hiredis.h>
-#include "src/NatsReceiver.h"
 #include "src/Downloader.h"
 
-#include <nats/nats.h>
+#include <natscommunication.h>
+
 #include <getopt.h>
 #include <iostream>
 
@@ -27,10 +27,8 @@ int main(int argc, char **argv) {
     int opt;
     std::string directory;
 
-    while((opt = getopt(argc, argv, "d:")) != -1)
-    {
-        switch(opt)
-        {
+    while((opt = getopt(argc, argv, "d:")) != -1) {
+        switch(opt) {
             case 'd':
                 printf("downloader directory: %s\n", optarg);
                 directory = optarg;
@@ -53,13 +51,15 @@ int main(int argc, char **argv) {
         producer->send("foo", urls);
     }*/
 
-    auto *receiver = new NatsReceiver("nats://127.0.0.1:4222");
+    std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
+    auto *receiver = new NatsReceiver(server);
 
-    std::string subject = getenv("SUBJECT") != nullptr ? getenv("SUBJECT") : "url";
+    std::string subject = getenv("SUBJECT") != nullptr ? getenv("SUBJECT") : "downloader";
+    std::string queue = getenv("QUEUE") != nullptr ? getenv("QUEUE") : "qdownloader";
 
     std::cout << "subject " << subject << std::endl;
 
-    receiver->subscribe(subject, onMsg, static_cast<void*>(&directory));
+    receiver->subscribe(subject, queue, onMsg, static_cast<void*>(&directory));
 
     return 0;
 }

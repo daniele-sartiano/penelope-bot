@@ -1,13 +1,11 @@
-//
-// Created by lele on 12/05/20.
-//
-
-#ifndef DOWNLOADER_NATSPRODUCER_H
-#define DOWNLOADER_NATSPRODUCER_H
+#ifndef COMMON_NATSCOMMUNICATION_H
+#define COMMON_NATSCOMMUNICATION_H
 
 #include <nats/nats.h>
 #include <string>
 #include <vector>
+
+
 
 class NatsProducer {
 public:
@@ -30,5 +28,23 @@ private:
     natsConnection *conn;
 };
 
+class NatsReceiver {
+public:
+    NatsReceiver(const std::string &server) {
+        this->conn = NULL;
+        natsStatus s;
+        s = natsConnection_ConnectTo(&this->conn, server.c_str());
+        if (s != NATS_OK)
+        {
+            nats_PrintLastErrorStack(stderr);
+            exit(2);
+        }
+    }
 
-#endif //DOWNLOADER_NATSPRODUCER_H
+    void subscribe(const std::string &subject, std::string &queue, void (*f)(natsConnection *, natsSubscription *, natsMsg *, void *),
+                   void * closure);
+private:
+    natsConnection *conn;
+};
+
+#endif //COMMON_NATSCOMMUNICATION_H

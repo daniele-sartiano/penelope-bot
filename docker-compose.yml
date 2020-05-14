@@ -19,6 +19,17 @@ services:
   nats-2:
     image: nats
     command: "--cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
-      
+
+  downloader:
+    build: downloader
+    depends_on:
+      - nats
+      - nats-1
+      - nats-2
+    environment:
+      - SUBJECT=downloader
+      - QUEUE=qdownloader
+      - NATS_URI=nats://nats:4222
+
 volumes:
   redis_data:
