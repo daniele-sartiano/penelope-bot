@@ -1,8 +1,8 @@
 #include <hiredis/hiredis.h>
-#include "src/NatsReceiver.h"
 #include "src/Downloader.h"
 
-#include <nats/nats.h>
+#include <natscommunication.h>
+
 #include <getopt.h>
 #include <iostream>
 
