@@ -13,3 +13,4 @@ cmake-build-debug
 3rdparty
 output
 cmake-build-release
+common
