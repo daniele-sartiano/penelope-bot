@@ -12,11 +12,14 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
 
     std::string &directory = *(static_cast<std::string*>(closure));
 
-    std::cout << "directory -> " << directory << std::endl;
+    //std::cout << "directory -> " << directory << std::endl;
 
     auto *p = new Parser();
-    p->parse(natsMsg_GetData(msg));
-
+    auto v = p->parse(natsMsg_GetData(msg));
+    for (const std::string& l : std::get<0>(v)) {
+        std::cout << l << std::endl;
+    }
+    
     // Need to destroy the message!
     natsMsg_Destroy(msg);
 }
