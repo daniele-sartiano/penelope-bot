@@ -60,7 +60,30 @@ add_library(libcommon SHARED IMPORTED)
 set_property(TARGET libcommon PROPERTY IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/common/libcommon.so")
 
 #########################################################################
-add_executable(data_manager main.cpp)
+# Download RapidJSON
+ExternalProject_Add(
+        rapidjson
+        PREFIX "vendor/rapidjson"
+        GIT_REPOSITORY "https://github.com/Tencent/rapidjson.git"
+        GIT_TAG f54b0e47a08782a6131cc3d60f94d038fa6e0a51
+        TIMEOUT 10
+        CMAKE_ARGS
+        -DRAPIDJSON_BUILD_TESTS=OFF
+        -DRAPIDJSON_BUILD_DOC=OFF
+        -DRAPIDJSON_BUILD_EXAMPLES=OFF
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        UPDATE_COMMAND ""
+)
+
+# Prepare RapidJSON (RapidJSON is a header-only library)
+ExternalProject_Get_Property(rapidjson source_dir)
+set(RAPIDJSON_INCLUDE_DIR ${source_dir}/include)
+include_directories(${RAPIDJSON_INCLUDE_DIR})
+#########################################################################
+
+add_executable(data_manager main.cpp src/DataManager.cpp src/DataManager.h src/Model.cpp src/Model.h)
 
 TARGET_LINK_LIBRARIES(data_manager NatsCClientLib)
 TARGET_LINK_LIBRARIES(data_manager ScyllaDriverLib)
