@@ -24,7 +24,7 @@ async def run(loop):
                      loop=loop)
 
     for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
-        await nc.publish("downloader", url.encode('utf-8'));
+        await nc.publish("downloader", url.encode('utf-8'))
 
     await nc.close()
 
