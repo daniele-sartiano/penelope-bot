@@ -16,6 +16,32 @@ size_t Downloader::write_data(void *ptr, size_t size, size_t nmemb, void *stream
     return size*nmemb;
 }
 
+
+bool Downloader::discard(int last_seen) {
+    CURL *curl;
+    CURLcode res;
+    long filetime = -1;
+
+    curl = curl_easy_init();
+
+    curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
+    curl_easy_setopt(curl, CURLOPT_URL, this->url);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
+    curl_easy_setopt(curl, CURLOPT_NOBODY, 1L );
+    curl_easy_setopt(curl, CURLOPT_HEADER, 0L );
+    curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+    res = curl_easy_perform(curl);
+
+    if(CURLE_OK == res) {
+        res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
+        std::cout << filetime << std::endl;
+        return ((CURLE_OK == res) && (filetime > last_seen));
+    }
+    return false;
+}
+
 void Downloader::download(std::string &directory) {
     CURL *curl;
     std::string file_name;
@@ -31,9 +57,16 @@ void Downloader::download(std::string &directory) {
     std::ofstream out_file;
     out_file.open(file_name);
 
-    curl = curl_easy_init();
+    if (this->discard()) {
+        std::cout << "discard " << this->url << std::endl;
+        return;
+    }
 
+    curl = curl_easy_init();
+    CURLcode res;
     curl_easy_setopt(curl, CURLOPT_URL, this->url);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out_file);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);

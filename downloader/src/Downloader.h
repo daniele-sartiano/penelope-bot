@@ -8,6 +8,8 @@
 #include <string>
 
 class Downloader {
+private:
+    const std::string USER_AGENT = "penelope-bot";
     const char *url;
     static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
     void download(std::string &directory);
@@ -16,6 +18,8 @@ public:
         this->url = url;
         download(directory);
     }
+
+    bool discard(int last_seen=0);
 };
 
 
