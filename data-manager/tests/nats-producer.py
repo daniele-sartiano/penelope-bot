@@ -4,6 +4,7 @@
 
 import asyncio
 from datetime import datetime
+import json
 from nats.aio.client import Client as NATS
 from nats.aio.errors import ErrConnectionClosed, ErrTimeout, ErrNoServers
 
@@ -23,8 +24,9 @@ async def run(loop):
                      max_reconnect_attempts=-1,
                      loop=loop)
 
-    for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
-        await nc.publish("downloader", url.encode('utf-8'))
+    d = {'timestamp': int(datetime.now().timestamp()), "link": "www.link.it", "text": "this is a test"}
+    await nc.publish("data-manager", json.dumps(d).encode('utf-8'))
+
 
     await nc.close()
 

@@ -23,8 +23,8 @@ async def run(loop):
                      max_reconnect_attempts=-1,
                      loop=loop)
 
-    for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
-        await nc.publish("downloader", url.encode('utf-8'))
+    for data in ["https://www.unipi.it /projects/penelope-bot/page.www.unipi.it.out"]:
+        await nc.publish("parser", data.encode('utf-8'));
 
     await nc.close()
 

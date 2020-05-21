@@ -8,7 +8,6 @@ project(parser)
 
 set(CMAKE_CXX_STANDARD 14)
 
-
 #########################################################################
 # Lexbor
 
@@ -75,7 +74,6 @@ include_directories(${install_dir}/include)
 add_library(GumboParserLib UNKNOWN IMPORTED)
 set_target_properties(GumboParserLib PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/libgumbo.so)
 add_dependencies(GumboParserLib GumboParser)
-
 #########################################################################
 # Common lib
 include_directories(${CMAKE_SOURCE_DIR}/common/include)
