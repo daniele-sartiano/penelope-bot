@@ -83,7 +83,7 @@ set(RAPIDJSON_INCLUDE_DIR ${source_dir}/include)
 include_directories(${RAPIDJSON_INCLUDE_DIR})
 #########################################################################
 
-add_executable(data_manager main.cpp src/DataManager.cpp src/DataManager.h src/Model.cpp src/Model.h)
+add_executable(data_manager main.cpp src/data_manager.cpp src/data_manager.h)
 
 TARGET_LINK_LIBRARIES(data_manager NatsCClientLib)
 TARGET_LINK_LIBRARIES(data_manager ScyllaDriverLib)

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <natscommunication.h>
-#include "src/DataManager.h"
+#include "src/data_manager.h"
 
 
 static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure) {

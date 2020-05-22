@@ -3,7 +3,7 @@
 //
 
 #include <iostream>
-#include "DataManager.h"
+#include "data_manager.h"
 
 void DataManager::log_error(CassFuture *future) {
     const char* message;
