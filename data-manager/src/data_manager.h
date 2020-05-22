@@ -2,13 +2,13 @@
 // Created by lele on 21/05/20.
 //
 
-#ifndef DATA_MANAGER_DATAMANAGER_H
-#define DATA_MANAGER_DATAMANAGER_H
+#ifndef DATA_MANAGER_DATA_MANAGER_H
+#define DATA_MANAGER_DATA_MANAGER_H
 
 
 #include <string>
 #include <cassandra.h>
-#include "Model.h"
+#include <model.h>
 
 class DataManager {
 private:
@@ -57,4 +57,4 @@ public:
 };
 
 
-#endif //DATA_MANAGER_DATAMANAGER_H
+#endif //DATA_MANAGER_DATA_MANAGER_H
