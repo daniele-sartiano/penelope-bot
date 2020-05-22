@@ -6,6 +6,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <tuple>
 #include "Downloader.h"
 
 size_t Downloader::write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
@@ -17,7 +18,7 @@ size_t Downloader::write_data(void *ptr, size_t size, size_t nmemb, void *stream
 }
 
 
-bool Downloader::discard(int last_seen) {
+bool Downloader::discard() {
     CURL *curl;
     CURLcode res;
     long filetime = -1;
@@ -25,7 +26,7 @@ bool Downloader::discard(int last_seen) {
     curl = curl_easy_init();
 
     curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
-    curl_easy_setopt(curl, CURLOPT_URL, this->url);
+    curl_easy_setopt(curl, CURLOPT_URL, this->link.c_str());
     curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1L );
     curl_easy_setopt(curl, CURLOPT_HEADER, 0L );
@@ -37,19 +38,20 @@ bool Downloader::discard(int last_seen) {
     if(CURLE_OK == res) {
         res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
         std::cout << filetime << std::endl;
-        return ((CURLE_OK == res) && (filetime > last_seen));
+        return ((CURLE_OK == res) && (this->last_seen >= filetime));
     }
     return false;
 }
 
-void Downloader::download(std::string &directory) {
+std::tuple<std::string, long, bool> Downloader::download(std::string &directory) {
     CURL *curl;
     std::string file_name;
+    long filetime = -1;
     std::string prefix = !directory.empty() ? directory.append("/") : "";
     file_name.append(prefix);
     file_name.append("page.");
 
-    file_name.append(this->url);
+    file_name.append(this->link);
     file_name.append(".out");
 
     std::cout << "filename --> " << file_name << std::endl;
@@ -58,13 +60,14 @@ void Downloader::download(std::string &directory) {
     out_file.open(file_name);
 
     if (this->discard()) {
-        std::cout << "discard " << this->url << std::endl;
-        return;
+        std::cout << "discard " << this->link << std::endl;
+        return std::make_tuple(file_name, this->last_seen, false);
     }
 
     curl = curl_easy_init();
-    CURLcode res;
-    curl_easy_setopt(curl, CURLOPT_URL, this->url);
+
+    curl_easy_setopt(curl, CURLOPT_URL, this->link.c_str());
+    curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
@@ -73,7 +76,11 @@ void Downloader::download(std::string &directory) {
 
     curl_easy_perform(curl); /* ignores error */
 
+    auto res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
+
     out_file.close();
 
     curl_easy_cleanup(curl);
+
+    return std::make_tuple(file_name, filetime, true);
 }
