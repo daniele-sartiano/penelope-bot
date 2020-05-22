@@ -91,7 +91,6 @@ set(common_HDR src/natscommunication.h src/model.h)
 
 add_library(common SHARED ${common_SRC} ${common_HDR})
 target_link_libraries(common NatsCClientLib)
-target_link_libraries(common gtest)
 
 set_target_properties(common PROPERTIES PUBLIC_HEADER src/natscommunication.h)
 target_include_directories(common PUBLIC src)
@@ -102,3 +101,8 @@ install(TARGETS common
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/common)
 
 
+add_executable(tests ${common_SRC} ${common_HDR} tests/tests.cpp)
+target_include_directories(tests PUBLIC src)
+target_link_libraries(tests gtest)
+target_link_libraries(tests NatsCClientLib)
+add_test(NAME example_test COMMAND tests)
