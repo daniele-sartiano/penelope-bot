@@ -6,11 +6,8 @@
 #define DOWNLOADER_DOWNLOADER_H
 
 #include <string>
-#include <rapidjson/document.h>
 #include <tuple>
 #include <model.h>
-
-using namespace rapidjson;
 
 class Downloader {
 private:
