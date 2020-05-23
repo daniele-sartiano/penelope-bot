@@ -27,7 +27,7 @@ bool Downloader::discard() {
     curl = curl_easy_init();
 
     curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
-    curl_easy_setopt(curl, CURLOPT_URL, this->link.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, this->model->getLink().c_str());
     curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1L );
     curl_easy_setopt(curl, CURLOPT_HEADER, 0L );
@@ -39,7 +39,7 @@ bool Downloader::discard() {
     if(CURLE_OK == res) {
         res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
         std::cout << filetime << std::endl;
-        return ((CURLE_OK == res) && (this->last_seen >= filetime));
+        return ((CURLE_OK == res) && filetime > 0 && (this->model->getTimestamp() >= filetime));
     }
     return false;
 }
@@ -52,7 +52,7 @@ std::tuple<std::string, long, bool> Downloader::download(std::string &directory)
     file_name.append(prefix);
     file_name.append("page.");
 
-    file_name.append(this->link);
+    file_name.append(this->model->getLink());
     file_name.append(".out");
 
     std::cout << "filename --> " << file_name << std::endl;
@@ -61,13 +61,13 @@ std::tuple<std::string, long, bool> Downloader::download(std::string &directory)
     out_file.open(file_name);
 
     if (this->discard()) {
-        std::cout << "discard " << this->link << std::endl;
-        return std::make_tuple(file_name, this->last_seen, false);
+        std::cout << "discard " << this->model->getLink() << std::endl;
+        return std::make_tuple(file_name, this->model->getTimestamp(), false);
     }
 
     curl = curl_easy_init();
 
-    curl_easy_setopt(curl, CURLOPT_URL, this->link.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, this->model->getLink().c_str());
     curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);

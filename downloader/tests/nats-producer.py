@@ -2,10 +2,12 @@
 
 # pip install asyncio-nats-client
 
+import json
 import asyncio
 from datetime import datetime
 from nats.aio.client import Client as NATS
 from nats.aio.errors import ErrConnectionClosed, ErrTimeout, ErrNoServers
+
 
 async def run(loop):
 
@@ -24,7 +26,8 @@ async def run(loop):
                      loop=loop)
 
     for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
-        await nc.publish("downloader", url.encode('utf-8'))
+        d = {"link": url, "timestamp": 0}
+        await nc.publish("downloader", json.dumps(d).encode('UTF-8'))
 
     await nc.close()
 

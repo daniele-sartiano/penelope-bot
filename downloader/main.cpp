@@ -16,7 +16,9 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
 
     std::cout << "directory -> " << directory << std::endl;
 
+    const clock_t begin_time = clock();
     Downloader(natsMsg_GetData(msg), directory);
+    std::cout << "Time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 
     // Need to destroy the message!
     natsMsg_Destroy(msg);
