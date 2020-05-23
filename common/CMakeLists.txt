@@ -90,6 +90,8 @@ set(common_SRC src/natscommunication.cpp src/model.cpp)
 set(common_HDR src/natscommunication.h src/model.h)
 
 add_library(common SHARED ${common_SRC} ${common_HDR})
+add_dependencies(common rapidjson)
+
 target_link_libraries(common NatsCClientLib)
 
 set_target_properties(common PROPERTIES PUBLIC_HEADER src/natscommunication.h)
@@ -102,6 +104,7 @@ install(TARGETS common
 
 
 add_executable(tests ${common_SRC} ${common_HDR} tests/tests.cpp)
+add_dependencies(tests rapidjson)
 target_include_directories(tests PUBLIC src)
 target_link_libraries(tests gtest)
 target_link_libraries(tests NatsCClientLib)

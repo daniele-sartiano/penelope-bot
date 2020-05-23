@@ -19,6 +19,7 @@ protected:
 
 TEST_F(ModelTest, CheckFields) {
     EXPECT_EQ(m->getLink(), "www.test.it");
+    EXPECT_EQ(m->getText(), "the text of the page");
 }
 
 
