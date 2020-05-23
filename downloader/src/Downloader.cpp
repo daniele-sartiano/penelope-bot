@@ -2,12 +2,13 @@
 // Created by lele on 31/07/19.
 //
 
+#include "Downloader.h"
 #include <curl/curl.h>
 #include <string>
 #include <fstream>
 #include <iostream>
 #include <tuple>
-#include "Downloader.h"
+
 
 size_t Downloader::write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     std::ofstream& outstream = *reinterpret_cast<std::ofstream*>(stream);

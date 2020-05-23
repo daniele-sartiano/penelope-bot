@@ -82,6 +82,7 @@ find_package(hiredis REQUIRED)
 find_package(rdkafka REQUIRED)
 
 add_executable(downloader main.cpp src/QueueManager.cpp src/QueueManager.h src/Downloader.cpp src/Downloader.h src/KafkaReader.cpp src/KafkaReader.h)
+add_dependencies(downloader rapidjson)
 
 #TARGET_LINK_LIBRARIES(downloader ${CMAKE_THREAD_LIBS_INIT})
 TARGET_LINK_LIBRARIES(downloader ${CURL_LIBRARIES})
