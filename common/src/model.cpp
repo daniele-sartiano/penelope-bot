@@ -6,7 +6,7 @@
 
 std::string Model::serialize() {
 
-    StringBuffer sb;
+    StringBuffer sb = nullptr;
     Writer<StringBuffer> writer(sb);
     writer.StartObject();
 
@@ -31,4 +31,24 @@ std::string Model::serialize() {
 
     writer.EndObject();
     return sb.GetString();
+}
+
+void Model::setTimestamp(int timestamp) {
+    Model::timestamp = timestamp;
+}
+
+void Model::setLink(const std::string &link) {
+    Model::link = link;
+}
+
+void Model::setText(const std::string &text) {
+    Model::text = text;
+}
+
+void Model::setFilename(const std::string &filename) {
+    Model::filename = filename;
+}
+
+void Model::setLinks(const std::set<std::string> &links) {
+    Model::links = links;
 }

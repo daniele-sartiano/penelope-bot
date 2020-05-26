@@ -22,7 +22,7 @@ private:
     static constexpr const char *KEY_FILENAME = "filename";
     static constexpr const char *KEY_LINKS = "links";
 
-    int timestamp = 0;
+    long timestamp = 0;
     std::string link = "";
     std::string text = "";
     std::string filename = "";
@@ -61,6 +61,16 @@ public:
         }
     }
 
+    void setTimestamp(int timestamp);
+
+    void setLink(const std::string &link);
+
+    void setText(const std::string &text);
+
+    void setFilename(const std::string &filename);
+
+    void setLinks(const std::set<std::string> &links);
+
     const std::string &getFilename() const {
         return filename;
     }
@@ -69,7 +79,7 @@ public:
         return links;
     }
 
-    int getTimestamp() const {
+    long getTimestamp() const {
         return timestamp;
     }
 
