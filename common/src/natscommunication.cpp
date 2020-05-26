@@ -2,16 +2,19 @@
 
 #include <iostream>
 
+void NatsProducer::send(const std::string &subject, std::string message) {
+    natsStatus s = natsConnection_Publish(this->conn, subject.c_str(), message.c_str(), message.size());
+    if (s == NATS_OK) {
+        std::cout << "message sent" << std::endl;
+    } else {
+        std::cerr << "message NOT sent" << std::endl;
+        nats_PrintLastErrorStack(stderr);
+    }
+}
+
 void NatsProducer::send(const std::string &subject, std::vector<std::string> messages) {
-    natsStatus s;
     for (std::string message : messages) {
-        s = natsConnection_Publish(this->conn, subject.c_str(), message.c_str(), message.size());
-        if (s == NATS_OK) {
-            std::cout << "message sent" << std::endl;
-        } else {
-            std::cerr << "message NOT sent" << std::endl;
-            nats_PrintLastErrorStack(stderr);
-        }
+        this->send(subject, message);
     }
 }
 

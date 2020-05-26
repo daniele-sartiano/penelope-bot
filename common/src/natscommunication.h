@@ -24,6 +24,7 @@ public:
         natsConnection_Destroy(this->conn);
     }
     void send(const std::string &subject, std::vector<std::string> messages);
+    void send(const std::string &subject, std::string message);
 private:
     natsConnection *conn;
 };
