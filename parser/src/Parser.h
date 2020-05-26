@@ -16,6 +16,7 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <model.h>
 
 
 class LexborParser {
@@ -24,10 +25,14 @@ public:
 };
 
 class Parser {
+    Model *model;
 public:
-    std::tuple<std::vector<std::string>, std::string> parse(const std::string &filename);
+    Parser(const std::string& serialized) {
+        this->model = new Model(serialized);
+    }
+    std::string parse();
 private:
-    std::vector<std::string> extract_links(GumboNode* node, std::string& url);
+    std::set<std::string> extract_links(GumboNode* node, std::string& url);
     std::string clean_text(GumboNode* node);
     std::string trim(const std::string &s);
     std::string transform_link(const std::string &link, const std::string &url);

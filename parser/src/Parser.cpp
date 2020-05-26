@@ -3,7 +3,6 @@
 //
 
 #include "Parser.h"
-#include <assert.h>
 #include <curl/curl.h>
 #include <iterator>
 #include <sstream>
@@ -71,19 +70,11 @@ void LexborParser::parse(const std::string &filename) {
 
 }
 
-std::tuple<std::vector<std::string>, std::string> Parser::parse(const std::string &data) {
-    std::istringstream iss(data);
-    std::vector<std::string> result{
-            std::istream_iterator<std::string>(iss), {}
-    };
+std::string Parser::parse() {
 
-    if (result.size() != 2) {
-        std::vector<std::string> v;
-        return std::make_tuple(v, "");
-    }
+    std::string url = this->model->getLink();
+    std::string filename = this->model->getFilename();
 
-    std::string url = result[0];
-    std::string filename = result[1];
     std::ifstream in(filename, std::ios::in | std::ios::binary);
     if (!in) {
         std::cerr << "File " << filename << " not found!\n";
@@ -98,15 +89,16 @@ std::tuple<std::vector<std::string>, std::string> Parser::parse(const std::strin
     in.close();
 
     GumboOutput* output = gumbo_parse(contents.c_str());
-    std::vector<std::string> links = this->extract_links(output->root, url);
+    std::set<std::string> links = this->extract_links(output->root, url);
     std::string text = this->clean_text(output->root);
-    //std::cout << text << std::endl;
     gumbo_destroy_output(&kGumboDefaultOptions, output);
-    return std::make_tuple(links, text);
+    this->model->setText(text);
+    this->model->setLinks(links);
+    return this->model->serialize();
 }
 
-std::vector<std::string> Parser::extract_links(GumboNode *node, std::string& url) {
-    std::vector<std::string> links;
+std::set<std::string> Parser::extract_links(GumboNode *node, std::string& url) {
+    std::set<std::string> links;
     if (node->type != GUMBO_NODE_ELEMENT) {
         return links;
     }
@@ -114,12 +106,12 @@ std::vector<std::string> Parser::extract_links(GumboNode *node, std::string& url
     if (node->v.element.tag == GUMBO_TAG_A &&
         (href = gumbo_get_attribute(&node->v.element.attributes, "href"))) {
         std::cerr << "was " << href->value << " now is " << this->transform_link(href->value, url) << std::endl;
-        links.emplace_back(this->transform_link(href->value, url));
+        links.insert(this->transform_link(href->value, url));
     }
     GumboVector* children = &node->v.element.children;
     for (unsigned int i = 0; i < children->length; ++i) {
-        std::vector<std::string> v = this->extract_links(static_cast<GumboNode*>(children->data[i]), url);
-        links.insert(links.end(), v.begin(), v.end());
+        std::set<std::string> v = this->extract_links(static_cast<GumboNode*>(children->data[i]), url);
+        links.insert(v.begin(), v.end());
     }
     return links;
 }

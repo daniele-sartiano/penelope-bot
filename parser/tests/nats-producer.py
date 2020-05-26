@@ -3,6 +3,7 @@
 # pip install asyncio-nats-client
 
 import asyncio
+import json
 from datetime import datetime
 from nats.aio.client import Client as NATS
 from nats.aio.errors import ErrConnectionClosed, ErrTimeout, ErrNoServers
@@ -23,8 +24,8 @@ async def run(loop):
                      max_reconnect_attempts=-1,
                      loop=loop)
 
-    for data in ["https://www.unipi.it /projects/penelope-bot/page.www.unipi.it.out"]:
-        await nc.publish("parser", data.encode('utf-8'));
+    for data in [{"link": "https://www.unipi.it", "timestamp": 0, "filename": "/projects/penelope-bot/page.www.unipi.it.out"}]:
+        await nc.publish("parser", json.dumps(data).encode('utf-8'))
 
     await nc.close()
 
