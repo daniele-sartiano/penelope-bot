@@ -12,13 +12,21 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
            natsMsg_GetDataLength(msg),
            natsMsg_GetData(msg));
 
-    std::string &directory = *(static_cast<std::string*>(closure));
+    std::string directory = getenv("DOWNLOAD_DIRECTORY") != nullptr ? getenv("DOWNLOAD_DIRECTORY") : "";
 
-    std::cout << "directory -> " << directory << std::endl;
+    std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
 
     const clock_t begin_time = clock();
-    Downloader(natsMsg_GetData(msg), directory);
+    Downloader d(natsMsg_GetData(msg));
+    std::string r = d.download(directory);
     std::cout << "Time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+    if (r.empty()) {
+        std::cerr << "Discard " << msg << std::endl;
+    } else {
+        std::string parser_subject = getenv("PARSER_SUBJECT") != nullptr ? getenv("PARSER_SUBJECT") : "parser";
+        auto *producer = new NatsProducer(server);
+        producer->send(parser_subject, r);
+    }
 
     // Need to destroy the message!
     natsMsg_Destroy(msg);
@@ -56,12 +64,10 @@ int main(int argc, char **argv) {
     std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
     auto *receiver = new NatsReceiver(server);
 
-    std::string subject = getenv("SUBJECT") != nullptr ? getenv("SUBJECT") : "downloader";
-    std::string queue = getenv("QUEUE") != nullptr ? getenv("QUEUE") : "qdownloader";
+    std::string downloader_subject = getenv("DOWNLOADER_SUBJECT") != nullptr ? getenv("DOWNLOADER_SUBJECT") : "downloader";
+    std::string downloader_queue = getenv("DOWNLOADER_QUEUE") != nullptr ? getenv("DOWNLOADER_QUEUE") : "qdownloader";
 
-    std::cout << "subject " << subject << std::endl;
-
-    receiver->subscribe(subject, queue, onMsg, static_cast<void*>(&directory));
+    receiver->subscribe(downloader_subject, downloader_queue, onMsg, NULL);
 
     return 0;
 }

@@ -15,12 +15,12 @@ private:
     Model *model;
 
     static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
-    std::tuple<std::string, long, bool> download(std::string &directory);
 public:
-    Downloader(const std::string& serialized, std::string directory="") {
+    Downloader(const std::string& serialized) {
         this->model = new Model(serialized);
-        auto o = download(directory);
     }
+
+    std::string download(std::string &directory);
 
     bool discard();
 };

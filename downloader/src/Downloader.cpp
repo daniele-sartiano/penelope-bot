@@ -44,7 +44,7 @@ bool Downloader::discard() {
     return false;
 }
 
-std::tuple<std::string, long, bool> Downloader::download(std::string &directory) {
+std::string Downloader::download(std::string &directory) {
     CURL *curl;
     std::string file_name;
     long filetime = -1;
@@ -62,7 +62,7 @@ std::tuple<std::string, long, bool> Downloader::download(std::string &directory)
 
     if (this->discard()) {
         std::cout << "discard " << this->model->getLink() << std::endl;
-        return std::make_tuple(file_name, this->model->getTimestamp(), false);
+        return "";
     }
 
     curl = curl_easy_init();
@@ -82,6 +82,8 @@ std::tuple<std::string, long, bool> Downloader::download(std::string &directory)
     out_file.close();
 
     curl_easy_cleanup(curl);
-
-    return std::make_tuple(file_name, filetime, true);
+    // int timestamp, std::string link, std::string text, std::string filename, std::set<std::string> links
+    this->model->setTimestamp(filetime);
+    this->model->setFilename(file_name);
+    return this->model->serialize();
 }
