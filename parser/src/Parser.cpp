@@ -105,7 +105,7 @@ std::set<std::string> Parser::extract_links(GumboNode *node, std::string& url) {
     GumboAttribute* href;
     if (node->v.element.tag == GUMBO_TAG_A &&
         (href = gumbo_get_attribute(&node->v.element.attributes, "href"))) {
-        std::cerr << "was " << href->value << " now is " << this->transform_link(href->value, url) << std::endl;
+        //std::cerr << "was " << href->value << " now is " << this->transform_link(href->value, url) << std::endl;
         links.insert(this->transform_link(href->value, url));
     }
     GumboVector* children = &node->v.element.children;
