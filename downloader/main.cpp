@@ -13,7 +13,6 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
            natsMsg_GetData(msg));
 
     std::string directory = getenv("DOWNLOAD_DIRECTORY") != nullptr ? getenv("DOWNLOAD_DIRECTORY") : "";
-
     std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
 
     const clock_t begin_time = clock();
