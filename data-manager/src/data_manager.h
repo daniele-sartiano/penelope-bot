@@ -47,13 +47,15 @@ public:
         q.append(this->db);
         q.append(".");
         q.append(this->table);
-        q.append(" (timestamp bigint, link text, text text, PRIMARY KEY (timestamp, link));");
+        q.append(" (timestamp bigint, link text, text text, PRIMARY KEY (link));");
 
         this->query(q);
     }
 
     CassError query(const std::string& query);
     CassError insert_model(const Model& model);
+    Model* select_model(Model& model);
+    Model* select_model(std::string& link);
 };
 
 
