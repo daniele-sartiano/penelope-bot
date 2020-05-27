@@ -1,5 +1,5 @@
 # penelope-bot
-A distributed C++ web crawler based on docker, nats.io and Scylla db.
+A distributed and asynchronous C++ Web Crawler based on Docker, nats.io and Scylla db.
 
 ## Modules
 
@@ -31,4 +31,11 @@ https://github.com/protobuf-c/protobuf-c
 
 ```
 cd downloader; mkdir -p build; cd build; cmake ..; make; cd ../..
+```
+
+
+### Data Manager
+#### dependencies
+```
+libuv1-dev
 ```
