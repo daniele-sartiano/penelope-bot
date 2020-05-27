@@ -8,6 +8,7 @@ services:
       - redis_data:/data
     ports:
       - '6379:6379'
+  
   nats:
     image: nats
     ports:
@@ -16,6 +17,7 @@ services:
   nats-1:
     image: nats
     command: "--cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
+
   nats-2:
     image: nats
     command: "--cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
@@ -26,10 +28,46 @@ services:
       - nats
       - nats-1
       - nats-2
+      - scylla-manager
     environment:
-      - SUBJECT=downloader
-      - QUEUE=qdownloader
+      - DOWNLOADER_SUBJECT=downloader
+      - DOWNLOADER_QUEUE=qdownloader
+      - DOWNLOAD_DIRECTORY=/data
+      - PARSER_SUBJECT=parser
       - NATS_URI=nats://nats:4222
+    volumes:
+      - output_data:/data
+
+  parser:
+    build: parser
+    depends_on:
+      - nats
+      - nats-1
+      - nats-2
+      - scylla-manager
+    environment:
+      - DOWNLOADER_SUBJECT=downloader
+      - DOWNLOADER_QUEUE=qdownloader
+      - PARSER_SUBJECT=parser
+      - PARSER_QUEUE=qparser
+      - NATS_URI=nats://nats:4222
+    volumes:
+      - output_data:/data
+
+  data-manager:
+    build: data-manager
+    depends_on:
+      - nats
+      - nats-1
+      - nats-2
+      - scylla-manager
+    environment:
+      - DOWNLOADER_SUBJECT=downloader
+      - DATA_MANAGER_SUBJECT=data-manager
+      - DATA_MANAGER_QUEUE=qdata-manager
+      - NATS_URI=nats://nats:4222
+    volumes:
+      - output_data:/data
 
   scylla-monitoring:
     image: scylladb/scylla-monitoring:metrics-server
@@ -40,7 +78,6 @@ services:
       - 8080:80
     depends_on:
       - scylla-manager
-
 
   scylla-manager:
     image: scylladb/scylla-manager
@@ -57,3 +94,4 @@ services:
 
 volumes:
   redis_data:
+  output_data:
