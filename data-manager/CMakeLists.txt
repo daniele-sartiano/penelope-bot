@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 include(ExternalProject)
@@ -84,6 +84,7 @@ include_directories(${RAPIDJSON_INCLUDE_DIR})
 #########################################################################
 
 add_executable(data_manager main.cpp src/data_manager.cpp src/data_manager.h)
+ADD_DEPENDENCIES(data_manager rapidjson)
 
 TARGET_LINK_LIBRARIES(data_manager NatsCClientLib)
 TARGET_LINK_LIBRARIES(data_manager ScyllaDriverLib)
