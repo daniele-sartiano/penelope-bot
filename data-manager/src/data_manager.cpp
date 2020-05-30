@@ -115,6 +115,10 @@ Model* DataManager::select_model(std::string& link) {
             cass_value_get_string(cass_row_get_column_by_name(row, "link"), &qlink, &qlink_size);
             cass_value_get_string(cass_row_get_column_by_name(row, "text"), &qtext, &qtext_size);
             std::set<std::string> s;
+
+            cass_result_free(result);
+            cass_iterator_free(iterator);
+            
             return new Model(qtimestamp, std::string(qlink), std::string(qtext), "", s);
 
         }
@@ -127,4 +131,9 @@ Model* DataManager::select_model(std::string& link) {
     cass_statement_free(statement);
 
     return nullptr;
+}
+
+DataManager::~DataManager() {
+    cass_session_free(this->session);
+    cass_cluster_free(this->cluster);
 }

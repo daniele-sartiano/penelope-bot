@@ -12,21 +12,23 @@
 
 class DataManager {
 private:
+    CassCluster* cluster;
     CassSession* session;
-    CassError connect_session(CassSession* session, const CassCluster* cluster);
-    static void log_error(CassFuture* future);
     std::string db = "penelopebot";
     std::string table = "data";
+
+    CassError connect_session(CassSession* session, const CassCluster* cluster);
+    static void log_error(CassFuture* future);
 public:
     explicit DataManager(const std::string& hosts, const std::string& dbname = "", const std::string& tablename = "") {
-        CassCluster* cluster = nullptr;
+        this->cluster = nullptr;
         this->session = cass_session_new();
 
-        cluster = cass_cluster_new();
+        this->cluster = cass_cluster_new();
         cass_cluster_set_contact_points(cluster, hosts.c_str());
 
-        if (connect_session(this->session, cluster) != CASS_OK) {
-            cass_cluster_free(cluster);
+        if (connect_session(this->session, this->cluster) != CASS_OK) {
+            cass_cluster_free(this->cluster);
             cass_session_free(this->session);
             exit(EXIT_FAILURE);
         }
@@ -51,6 +53,8 @@ public:
 
         this->query(q);
     }
+
+    virtual ~DataManager();
 
     CassError query(const std::string& query);
     CassError insert_model(const Model& model);
