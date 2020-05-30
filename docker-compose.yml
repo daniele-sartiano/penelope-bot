@@ -22,6 +22,14 @@ services:
     image: nats
     command: "--cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
 
+  nats-top:
+    image: byrnedo/nats-top
+    command: "--s nats"
+    depends_on:
+      - nats
+      - nats-1
+      - nats-2
+
   downloader:
     build: downloader
     depends_on:
@@ -37,6 +45,11 @@ services:
       - NATS_URI=nats://nats:4222
     volumes:
       - output_data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
 
   parser:
     build: parser
@@ -53,6 +66,11 @@ services:
       - NATS_URI=nats://nats:4222
     volumes:
       - output_data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
 
   data-manager:
     build: data-manager
@@ -66,8 +84,14 @@ services:
       - DATA_MANAGER_SUBJECT=data-manager
       - DATA_MANAGER_QUEUE=qdata-manager
       - NATS_URI=nats://nats:4222
+      - SCYLLADB=scylla-manager-db
     volumes:
       - output_data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
 
   scylla-monitoring:
     image: scylladb/scylla-monitoring:metrics-server
@@ -90,6 +114,16 @@ services:
     container_name: scylla-manager-db
     ports:
       - 9042:9042
+
+  scylla-manager-db2:
+    image: scylladb/scylla
+    container_name: scylla-manager-db2
+    command: --seeds=scylla-manager-db
+
+  scylla-manager-db3:
+    image: scylladb/scylla
+    container_name: scylla-manager-db3
+    command: --seeds=scylla-manager-db
 
 
 volumes:
