@@ -1,14 +1,6 @@
 version: '3'
 
 services:
-  redis:
-    image: redis
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis_data:/data
-    ports:
-      - '6379:6379'
-  
   nats:
     image: nats
     ports:
@@ -22,13 +14,27 @@ services:
     image: nats
     command: "--cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
 
-  nats-top:
-    image: byrnedo/nats-top
-    command: "--s nats"
-    depends_on:
-      - nats
-      - nats-1
-      - nats-2
+  # prometheus-nats-exporter:
+  #   image: synadia/prometheus-nats-exporter
+  #   hostname: prometheus-nats-exporter
+  #   command: "-connz -varz -channelz -serverz -subz http://127.0.0.1:8222"
+  #   restart: unless-stopped
+  #   ports:
+  #     - "7777:7777"
+
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   hostname: prometheus
+  #   volumes:
+  #     - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+  #   ports:
+  #     - "9090:9090"
+
+  # grafana:
+  #   image: grafana/grafana
+  #   hostname: grafana
+  #   ports:
+  #     - "3000:3000"
 
   downloader:
     build: downloader
@@ -123,6 +129,26 @@ services:
   scylla-manager-db3:
     image: scylladb/scylla
     container_name: scylla-manager-db3
+    command: --seeds=scylla-manager-db
+
+  scylla-manager-db4:
+    image: scylladb/scylla
+    container_name: scylla-manager-db4
+    command: --seeds=scylla-manager-db
+
+  scylla-manager-db5:
+    image: scylladb/scylla
+    container_name: scylla-manager-db5
+    command: --seeds=scylla-manager-db
+
+  scylla-manager-db6:
+    image: scylladb/scylla
+    container_name: scylla-manager-db6
+    command: --seeds=scylla-manager-db
+
+  scylla-manager-db7:
+    image: scylladb/scylla
+    container_name: scylla-manager-db7
     command: --seeds=scylla-manager-db
 
 
