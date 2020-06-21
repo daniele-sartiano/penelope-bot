@@ -18,7 +18,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     const clock_t begin_time = clock();
     Downloader d(natsMsg_GetData(msg));
     std::string r = d.download(directory);
-    std::cout << "Time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+
     if (r.empty()) {
         std::cerr << "Discard " << msg << std::endl;
     } else {
@@ -29,6 +29,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
 
     // Need to destroy the message!
     natsMsg_Destroy(msg);
+    std::cout << d.get_model()->getLink() << " - time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 }
 
 int main(int argc, char **argv) {
