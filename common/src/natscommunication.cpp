@@ -4,9 +4,7 @@
 
 void NatsProducer::send(const std::string &subject, std::string message) {
     natsStatus s = natsConnection_Publish(this->conn, subject.c_str(), message.c_str(), message.size());
-    if (s == NATS_OK) {
-        std::cout << "message sent" << std::endl;
-    } else {
+    if (s != NATS_OK) {
         std::cerr << "message NOT sent" << std::endl;
         nats_PrintLastErrorStack(stderr);
     }
