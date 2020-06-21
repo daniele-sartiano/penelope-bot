@@ -15,6 +15,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
 
     //std::cout << "Received " << m.serialize() << std::endl;
 
+    const clock_t begin_time = clock();
     if (d->select_model(m) == nullptr) {
         d->insert_model(m);
     }
@@ -27,7 +28,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
         if (selected == nullptr) {
             std::set<std::string> s;
             Model m(0, l, "", "", s);
-            std::cout << "Sending " << l << std::endl;
+            //std::cout << "Sending " << l << std::endl;
             producer->send(downloader_subject, m.serialize());
         } else {
             delete selected;
@@ -37,6 +38,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     // Need to destroy the message!
     natsMsg_Destroy(msg);
     delete producer;
+    std::cout << m.getLink() << " - time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 }
 
 int main() {
