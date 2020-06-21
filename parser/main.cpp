@@ -5,14 +5,11 @@
 
 
 static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure) {
-    printf("Received msg: %s - %.*s\n",
-           natsMsg_GetSubject(msg),
-           natsMsg_GetDataLength(msg),
-           natsMsg_GetData(msg));
 
+    const clock_t begin_time = clock();
     auto *p = new Parser(natsMsg_GetData(msg));
     auto v = p->parse();
-    std::cout << v << std::endl;
+
 
     std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
     std::string data_manager_subject = getenv("DATA_MANAGER_SUBJECT") != nullptr ? getenv("DATA_MANAGER_SUBJECT") : "data-manager";
@@ -20,6 +17,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     producer->send(data_manager_subject, v);
     // Need to destroy the message!
     natsMsg_Destroy(msg);
+    std::cout << p->get_model()->getLink() << " - time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 }
 
 int main() {
