@@ -49,16 +49,26 @@ CassError DataManager::insert_model(const Model& model) {
     CassError rc;
     CassStatement* statement = nullptr;
     CassFuture* future = nullptr;
+    CassCollection* links = nullptr;
+
     std::string query = "INSERT INTO ";
     query.append(this->db);
     query.append(".");
     query.append(this->table);
-    query.append(" (timestamp, link, text) VALUES (?, ?, ?);");
-    statement = cass_statement_new(query.c_str(), 3);
+    query.append(" (timestamp, link, text, links) VALUES (?, ?, ?, ?);");
+    statement = cass_statement_new(query.c_str(), 4);
 
     cass_statement_bind_int64(statement, 0, model.getTimestamp());
     cass_statement_bind_string(statement, 1, model.getLink().c_str());
     cass_statement_bind_string(statement, 2, model.getText().c_str());
+
+    links = cass_collection_new(CASS_COLLECTION_TYPE_SET, model.getLinks().size());
+    for (std::string l: model.getLinks()) {
+        cass_collection_append_string(links, l.c_str());
+    }
+
+    cass_statement_bind_collection(statement, 3, links);
+    cass_collection_free(links);
 
     future = cass_session_execute(this->session, statement);
     cass_future_wait(future);
