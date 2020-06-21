@@ -94,6 +94,11 @@ std::string Parser::parse() {
     gumbo_destroy_output(&kGumboDefaultOptions, output);
     this->model->setText(text);
     this->model->setLinks(links);
+
+    if(remove( filename.c_str()) != 0) {
+        std::cerr <<  "Error deleting file " << filename << std::endl;
+    }
+
     return this->model->serialize();
 }
 
@@ -165,4 +170,8 @@ inline std::string Parser::transform_link(const std::string &link, const std::st
         ns.append(link);
     }
     return ns;
+}
+
+Model *Parser::get_model() const {
+    return model;
 }

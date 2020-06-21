@@ -31,6 +31,8 @@ public:
         this->model = new Model(serialized);
     }
     std::string parse();
+    Model *get_model() const;
+
 private:
     std::set<std::string> extract_links(GumboNode* node, std::string& url);
     std::string clean_text(GumboNode* node);
