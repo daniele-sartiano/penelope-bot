@@ -22,6 +22,8 @@ public:
 
     std::string download(std::string &directory);
 
+    Model *get_model() const;
+
     bool discard();
 };
 

@@ -103,3 +103,7 @@ std::string Downloader::download(std::string &directory) {
     this->model->setFilename(file_name);
     return this->model->serialize();
 }
+
+Model *Downloader::get_model() const {
+    return model;
+}
