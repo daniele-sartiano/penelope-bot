@@ -23,6 +23,23 @@ TEST_F(ModelTest, CheckFields) {
 }
 
 
+TEST_F(ModelTest, CheckMultipleSerDes) {
+    std::string s1 = m->serialize();
+    std::string s2 = m->serialize();
+    std::string s3 = "{\"models\":[";
+    s3.append(s1);
+    s3.append(",");
+    s3.append(s2);
+    s3.append("]}");
+    std::vector<Model> models = Model::deserialize_models(s3);
+    std::cout << s3 << std::endl;
+    EXPECT_EQ(models.size(), 2);
+    Model m1 = models.front();
+    EXPECT_EQ(m1.getLink(), m->getLink());
+    std::string s4 = Model::serialize_models(models);
+    EXPECT_EQ(s4, s3);
+}
+
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
 return RUN_ALL_TESTS();

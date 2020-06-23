@@ -10,17 +10,18 @@
 #include <string>
 #include <set>
 #include <utility>
+#include <vector>
 
 using namespace rapidjson;
 
 class Model {
 private:
-
+    static constexpr const char *KEY_LINKS = "links";
     static constexpr const char *KEY_TIMESTAMP = "timestamp";
     static constexpr const char *KEY_LINK = "link";
     static constexpr const char *KEY_TEXT = "text";
     static constexpr const char *KEY_FILENAME = "filename";
-    static constexpr const char *KEY_LINKS = "links";
+    static constexpr const char *KEY_MODELS = "models";
 
     long timestamp = 0;
     std::string link = "";
@@ -60,6 +61,9 @@ public:
             }
         }
     }
+
+    static std::vector<Model> deserialize_models(const std::string &serialized);
+    static std::string serialize_models(std::vector<Model>);
 
     void setTimestamp(int timestamp);
 
