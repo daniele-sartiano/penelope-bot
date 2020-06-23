@@ -72,34 +72,45 @@ void LexborParser::parse(const std::string &filename) {
 
 std::string Parser::parse() {
 
-    std::string url = this->model->getLink();
-    std::string filename = this->model->getFilename();
+    std::vector<Model> parser_models;
 
-    std::ifstream in(filename, std::ios::in | std::ios::binary);
-    if (!in) {
-        std::cerr << "File " << filename << " not found!\n";
-        exit(EXIT_FAILURE);
+    for (auto m: this->models) {
+        std::string url = m.getLink();
+        std::string filename = m.getFilename();
+
+        std::cout << "Elaborating " << filename << std::endl;
+
+        std::ifstream in(filename, std::ios::in | std::ios::binary);
+        if (!in) {
+            std::cerr << "File " << filename << " not found!\n";
+            continue;
+        }
+
+        std::string contents;
+        in.seekg(0, std::ios::end);
+        contents.resize(in.tellg());
+        in.seekg(0, std::ios::beg);
+        in.read(&contents[0], contents.size());
+        in.close();
+
+        GumboOutput* output = gumbo_parse(contents.c_str());
+        std::set<std::string> links = this->extract_links(output->root, url);
+        std::string text = this->clean_text(output->root);
+        gumbo_destroy_output(&kGumboDefaultOptions, output);
+        m.setText(text);
+        m.setLinks(links);
+
+        if(remove( filename.c_str()) != 0) {
+            std::cerr <<  "Error deleting file " << filename << std::endl;
+        }
+
+        parser_models.push_back(m);
     }
 
-    std::string contents;
-    in.seekg(0, std::ios::end);
-    contents.resize(in.tellg());
-    in.seekg(0, std::ios::beg);
-    in.read(&contents[0], contents.size());
-    in.close();
+    this->models.clear();
+    this->models = parser_models;
 
-    GumboOutput* output = gumbo_parse(contents.c_str());
-    std::set<std::string> links = this->extract_links(output->root, url);
-    std::string text = this->clean_text(output->root);
-    gumbo_destroy_output(&kGumboDefaultOptions, output);
-    this->model->setText(text);
-    this->model->setLinks(links);
-
-    if(remove( filename.c_str()) != 0) {
-        std::cerr <<  "Error deleting file " << filename << std::endl;
-    }
-
-    return this->model->serialize();
+    return Model::serialize_models(this->models);
 }
 
 std::set<std::string> Parser::extract_links(GumboNode *node, std::string& url) {
@@ -172,6 +183,6 @@ inline std::string Parser::transform_link(const std::string &link, const std::st
     return ns;
 }
 
-Model *Parser::get_model() const {
-    return model;
+std::vector<Model> Parser::get_models() const {
+    return models;
 }

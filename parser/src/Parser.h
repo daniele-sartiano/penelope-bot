@@ -25,13 +25,13 @@ public:
 };
 
 class Parser {
-    Model *model;
+    std::vector<Model> models;
 public:
     Parser(const std::string& serialized) {
-        this->model = new Model(serialized);
+        this->models = Model::deserialize_models(serialized);
     }
     std::string parse();
-    Model *get_model() const;
+    std::vector<Model> get_models() const;
 
 private:
     std::set<std::string> extract_links(GumboNode* node, std::string& url);

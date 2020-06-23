@@ -17,7 +17,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     producer->send(data_manager_subject, v);
     // Need to destroy the message!
     natsMsg_Destroy(msg);
-    std::cout << p->get_model()->getLink() << " - time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+    std::cout << "Time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 }
 
 int main() {

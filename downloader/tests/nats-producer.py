@@ -25,9 +25,14 @@ async def run(loop):
                      max_reconnect_attempts=-1,
                      loop=loop)
 
-    for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
-        d = {"link": url, "timestamp": 0}
-        await nc.publish("downloader", json.dumps(d).encode('UTF-8'))
+    #for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
+    for urls in [["www.unipi.it", "www.sartiano.info", "www.corriere.it"]]:
+        models = []
+        for url in urls:
+            models.append({"link": url, "timestamp": 0})
+        msg = {"models": models}
+        print(msg)
+        await nc.publish("downloader", json.dumps(msg).encode('UTF-8'))
 
     await nc.close()
 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <natscommunication.h>
+#include <assert.h>
 #include "src/data_manager.h"
 
 
@@ -11,34 +12,56 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
 
     auto d = static_cast<DataManager*>(closure);
 
-    Model m(natsMsg_GetData(msg));
+    std::vector<Model> models = Model::deserialize_models(natsMsg_GetData(msg));
 
-    //std::cout << "Received " << m.serialize() << std::endl;
+    //Model m(natsMsg_GetData(msg));
 
+    std::vector<Model> out_models;
     const clock_t begin_time = clock();
-    if (d->select_model(m) == nullptr) {
-        d->insert_model(m);
-    }
+    for (auto m: models) {
+        //std::cout << "Received " << m.serialize() << std::endl;
+        if (d->select_model(m) == nullptr) {
+            d->insert_model(m);
+        }
 
+        for (std::string l : m.getLinks()) {
+            Model* selected = d->select_model(l);
+            if (selected == nullptr) {
+                std::set<std::string> s;
+                Model m_out(0, l, "", "", s);
+                //std::cout << "Sending " << l << std::endl;
+                out_models.push_back(m_out);
+            } else {
+                delete selected;
+            }
+        }
+    }
     std::string downloader_subject = getenv("DOWNLOADER_SUBJECT") != nullptr ? getenv("DOWNLOADER_SUBJECT") : "downloader";
     std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
     auto *producer = new NatsProducer(server);
-    for (std::string l : m.getLinks()) {
-        Model* selected = d->select_model(l);
-        if (selected == nullptr) {
-            std::set<std::string> s;
-            Model m(0, l, "", "", s);
-            //std::cout << "Sending " << l << std::endl;
-            producer->send(downloader_subject, m.serialize());
-        } else {
-            delete selected;
+
+    std::vector<Model> subv;
+    int count = 0;
+    for (auto m: out_models) {
+        subv.push_back(m);
+        if (subv.size() == 20) {
+            producer->send(downloader_subject, Model::serialize_models(subv));
+            subv.clear();
+            assert(subv.empty());
         }
+    }
+
+    if (!subv.empty()) {
+        producer->send(downloader_subject, Model::serialize_models(subv));
+        subv.clear();
     }
 
     // Need to destroy the message!
     natsMsg_Destroy(msg);
     delete producer;
-    std::cout << m.getLink() << " - time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+    models.clear();
+    out_models.clear();
+    std::cout << "time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 }
 
 int main() {

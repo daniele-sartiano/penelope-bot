@@ -12,7 +12,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
            natsMsg_GetDataLength(msg),
            natsMsg_GetData(msg));
 
-    std::string directory = getenv("DOWNLOAD_DIRECTORY") != nullptr ? getenv("DOWNLOAD_DIRECTORY") : "";
+    std::string directory = getenv("DOWNLOAD_DIRECTORY") != nullptr ? getenv("DOWNLOAD_DIRECTORY") : "/tmp";
     std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
 
     const clock_t begin_time = clock();
@@ -29,7 +29,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
 
     // Need to destroy the message!
     natsMsg_Destroy(msg);
-    std::cout << d.get_model()->getLink() << " - time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+    std::cout << "Time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 }
 
 int main(int argc, char **argv) {

@@ -12,19 +12,19 @@
 class Downloader {
 private:
     const std::string USER_AGENT = "penelope-bot";
-    Model *model;
+    std::vector<Model> models;
 
     static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
 public:
     Downloader(const std::string& serialized) {
-        this->model = new Model(serialized);
+        this->models = Model::deserialize_models(serialized);
     }
 
     std::string download(std::string &directory);
 
-    Model *get_model() const;
+    std::vector<Model> get_models() const;
 
-    bool discard();
+    bool discard(Model& model);
 };
 
 
