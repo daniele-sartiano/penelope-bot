@@ -39,7 +39,7 @@ bool Downloader::discard(Model& m) {
 
     if(CURLE_OK == res) {
         res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
-        std::cout << filetime << std::endl;
+        //std::cout << filetime << std::endl;
         return ((CURLE_OK == res) && filetime > 0 && (m.getTimestamp() >= filetime));
     }
     return false;
@@ -61,7 +61,7 @@ std::string Downloader::download(std::string &directory) {
         file_name.append(std::to_string(hashed));
         file_name.append(".out");
 
-        std::cout << "filename --> " << file_name << std::endl;
+        //std::cout << "filename --> " << file_name << std::endl;
 
         FILE  *pagefile;
         pagefile = fopen(file_name.c_str(), "wb");
