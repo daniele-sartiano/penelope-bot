@@ -12,6 +12,8 @@
 
 class DataManager {
 private:
+    const static int REPLICATION_FACTOR = 1;
+
     CassCluster* cluster;
     CassSession* session;
     std::string db = "penelopebot";
@@ -39,7 +41,9 @@ public:
 
         std::string q = "CREATE KEYSPACE IF NOT EXISTS ";
         q.append(this->db);
-        q.append(" WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };");
+        q.append(" WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '");
+        q.append(std::to_string(REPLICATION_FACTOR));
+        q.append("' };");
         this->query(q);
 
         if (!tablename.empty()) {
