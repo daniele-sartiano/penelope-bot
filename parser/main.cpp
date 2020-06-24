@@ -3,6 +3,7 @@
 
 #include <natscommunication.h>
 
+int counter = 0;
 
 static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure) {
 
@@ -15,6 +16,12 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     std::string data_manager_subject = getenv("DATA_MANAGER_SUBJECT") != nullptr ? getenv("DATA_MANAGER_SUBJECT") : "data-manager";
     auto *producer = new NatsProducer(server);
     producer->send(data_manager_subject, v);
+    counter++;
+
+    if (counter % 10 == 0) {
+        std::cout << "Received " << counter << " messages" << std::endl;
+    }
+
     // Need to destroy the message!
     natsMsg_Destroy(msg);
     std::cout << "Time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
