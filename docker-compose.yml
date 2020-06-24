@@ -153,5 +153,4 @@ services:
 
 
 volumes:
-  redis_data:
   output_data:
