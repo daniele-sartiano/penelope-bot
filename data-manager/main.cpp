@@ -10,6 +10,8 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
            natsMsg_GetDataLength(msg),
            natsMsg_GetData(msg));*/
 
+    int counter = 0;
+
     auto d = static_cast<DataManager*>(closure);
 
     std::vector<Model> models = Model::deserialize_models(natsMsg_GetData(msg));
@@ -41,17 +43,19 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     auto *producer = new NatsProducer(server);
 
     std::vector<Model> subv;
-    int count = 0;
+
     for (auto m: out_models) {
         subv.push_back(m);
         if (subv.size() == 20) {
             producer->send(downloader_subject, Model::serialize_models(subv));
+            counter++;
             subv.clear();
             assert(subv.empty());
         }
     }
 
     if (!subv.empty()) {
+        counter++;
         producer->send(downloader_subject, Model::serialize_models(subv));
         subv.clear();
     }
@@ -61,7 +65,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     delete producer;
     models.clear();
     out_models.clear();
-    std::cout << "time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+    std::cout << "time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " - " << counter << " msg sent" << std::endl;
 }
 
 int main() {
