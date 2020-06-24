@@ -128,7 +128,9 @@ Model* DataManager::select_model(std::string& link) {
 
             cass_result_free(result);
             cass_iterator_free(iterator);
-            
+            cass_future_free(future);
+            cass_statement_free(statement);
+
             return new Model(qtimestamp, std::string(qlink), std::string(qtext), "", s);
 
         }
