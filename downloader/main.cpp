@@ -7,13 +7,14 @@
 #include <iostream>
 
 static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure) {
-    printf("Received msg: %s - %.*s\n",
+    /*printf("Received msg: %s - %.*s\n",
            natsMsg_GetSubject(msg),
            natsMsg_GetDataLength(msg),
-           natsMsg_GetData(msg));
+           natsMsg_GetData(msg));*/
 
     std::string directory = getenv("DOWNLOAD_DIRECTORY") != nullptr ? getenv("DOWNLOAD_DIRECTORY") : "/tmp";
     std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
+    std::string parser_subject = getenv("PARSER_SUBJECT") != nullptr ? getenv("PARSER_SUBJECT") : "parser";
 
     const clock_t begin_time = clock();
     Downloader d(natsMsg_GetData(msg));
@@ -22,9 +23,10 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     if (r.empty()) {
         std::cerr << "Discard " << msg << std::endl;
     } else {
-        std::string parser_subject = getenv("PARSER_SUBJECT") != nullptr ? getenv("PARSER_SUBJECT") : "parser";
         auto *producer = new NatsProducer(server);
+        std::cout << "Sending msg" << std::endl;
         producer->send(parser_subject, r);
+        delete producer;
     }
 
     // Need to destroy the message!
@@ -32,42 +34,39 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     std::cout << "Time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 }
 
+void* listen(void *thid) {
+
+    std::cout << "Thread " << (long)thid << std::endl;
+
+    std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
+    std::string downloader_subject = getenv("DOWNLOADER_SUBJECT") != nullptr ? getenv("DOWNLOADER_SUBJECT") : "downloader";
+    std::string downloader_queue = getenv("DOWNLOADER_QUEUE") != nullptr ? getenv("DOWNLOADER_QUEUE") : "qdownloader";
+    auto *receiver = new NatsReceiver(server);
+    receiver->subscribe(downloader_subject, downloader_queue, onMsg, NULL);
+}
+
 int main(int argc, char **argv) {
+    int NUMT = 30;
+    pthread_t tid[NUMT];
+    int error;
 
-    int opt;
-    std::string directory;
-
-    while((opt = getopt(argc, argv, "d:")) != -1) {
-        switch(opt) {
-            case 'd':
-                printf("downloader directory: %s\n", optarg);
-                directory = optarg;
-                std::cout << directory << std::endl;
-                break;
-            case '?':
-                printf("unknown option: %c\n", optopt);
-                break;
+    for (int i=0; i<NUMT; i++) {
+        error = pthread_create(
+                &tid[i],
+                NULL,
+                listen,
+                (void *)i);
+        if (0 != error) {
+            std::cerr << "Could't run thread number " << i << " errno " << error << std::endl;
         }
     }
 
-    /*std::vector<std::string> urls;
-    urls.emplace_back("www.sartiano.info");
-    urls.emplace_back("www.repubblica.it");
-    urls.emplace_back("www.corriere.it");
+    for(int i=0; i< NUMT; i++) {
+        error = pthread_join(tid[i], NULL);
+        std::cout << "Thread " << i << " terminated" << std::endl;
+    }
 
-    auto *producer = new NatsProducer("nats://127.0.0.1:4222");
-
-    for (int i=0; i<100000; i++) {
-        producer->send("foo", urls);
-    }*/
-
-    std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
-    auto *receiver = new NatsReceiver(server);
-
-    std::string downloader_subject = getenv("DOWNLOADER_SUBJECT") != nullptr ? getenv("DOWNLOADER_SUBJECT") : "downloader";
-    std::string downloader_queue = getenv("DOWNLOADER_QUEUE") != nullptr ? getenv("DOWNLOADER_QUEUE") : "qdownloader";
-
-    receiver->subscribe(downloader_subject, downloader_queue, onMsg, NULL);
+    pthread_exit(NULL);
 
     return 0;
 }
