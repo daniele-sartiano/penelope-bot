@@ -46,7 +46,7 @@ void* listen(void *thid) {
 }
 
 int main(int argc, char **argv) {
-    int NUMT = 30;
+    int NUMT = 100;
     pthread_t tid[NUMT];
     int error;
 
