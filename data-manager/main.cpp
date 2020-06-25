@@ -26,11 +26,11 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
             d->insert_model(m);
         }
 
-        for (std::string l : m.getLinks()) {
+        for (std::string l : m.get_links()) {
             Model* selected = d->select_model(l);
             if (selected == nullptr) {
                 std::set<std::string> s;
-                Model m_out(0, l, "", "", s);
+                Model m_out(0, l, "", "", "", s);
                 //std::cout << "Sending " << l << std::endl;
                 out_models.push_back(m_out);
             } else {
@@ -46,7 +46,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
 
     for (auto m: out_models) {
         subv.push_back(m);
-        if (subv.size() == 20) {
+        if (subv.size() == 5) {
             producer->send(downloader_subject, Model::serialize_models(subv));
             counter++;
             subv.clear();
