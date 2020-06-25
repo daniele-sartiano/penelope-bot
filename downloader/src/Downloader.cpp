@@ -28,7 +28,7 @@ bool Downloader::discard(Model& m) {
     curl = curl_easy_init();
 
     curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
-    curl_easy_setopt(curl, CURLOPT_URL, m.getLink().c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, m.get_link().c_str());
     curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1L );
     curl_easy_setopt(curl, CURLOPT_HEADER, 0L );
@@ -40,7 +40,7 @@ bool Downloader::discard(Model& m) {
     if(CURLE_OK == res) {
         res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
         //std::cout << filetime << std::endl;
-        return ((CURLE_OK == res) && filetime > 0 && (m.getTimestamp() >= filetime));
+        return ((CURLE_OK == res) && filetime > 0 && (m.get_timestamp() >= filetime));
     }
     return false;
 }
@@ -53,7 +53,7 @@ std::string Downloader::download(std::string &directory) {
         CURL *curl;
         long filetime = -1;
         std::hash<std::string> hasher;
-        auto hashed = hasher(m.getLink());
+        auto hashed = hasher(m.get_link());
 
         std::string file_name;
         file_name.append(prefix);
@@ -71,13 +71,13 @@ std::string Downloader::download(std::string &directory) {
         }
 
         if (this->discard(m)) {
-            std::cout << "discard " << m.getLink() << std::endl;
+            std::cout << "discard " << m.get_link() << std::endl;
             continue;
         }
 
         curl = curl_easy_init();
 
-        curl_easy_setopt(curl, CURLOPT_URL, m.getLink().c_str());
+        curl_easy_setopt(curl, CURLOPT_URL, m.get_link().c_str());
         curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
         curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -90,15 +90,17 @@ std::string Downloader::download(std::string &directory) {
 
         auto res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
 
-        // out_file.close();
+        char *ip;
+        res = curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &ip);
 
         fclose(pagefile);
 
         curl_easy_cleanup(curl);
         curl_global_cleanup();
         // int timestamp, std::string link, std::string text, std::string filename, std::set<std::string> links
-        m.setTimestamp(filetime);
-        m.setFilename(file_name);
+        m.set_timestamp(filetime);
+        m.set_filename(file_name);
+        m.set_ip(ip);
         downloader_models.push_back(m);
     }
     this->models.clear();

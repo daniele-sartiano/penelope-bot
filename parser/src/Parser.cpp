@@ -75,8 +75,8 @@ std::string Parser::parse() {
     std::vector<Model> parser_models;
 
     for (auto m: this->models) {
-        std::string url = m.getLink();
-        std::string filename = m.getFilename();
+        std::string url = m.get_link();
+        std::string filename = m.get_filename();
 
         std::cout << "Elaborating " << filename << std::endl;
 
@@ -97,8 +97,8 @@ std::string Parser::parse() {
         std::set<std::string> links = this->extract_links(output->root, url);
         std::string text = this->clean_text(output->root);
         gumbo_destroy_output(&kGumboDefaultOptions, output);
-        m.setText(text);
-        m.setLinks(links);
+        m.set_text(text);
+        m.set_links(links);
 
         if(remove( filename.c_str()) != 0) {
             std::cerr <<  "Error deleting file " << filename << std::endl;

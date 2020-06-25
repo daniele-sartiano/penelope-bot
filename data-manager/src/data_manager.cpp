@@ -55,19 +55,23 @@ CassError DataManager::insert_model(const Model& model) {
     query.append(this->db);
     query.append(".");
     query.append(this->table);
-    query.append(" (timestamp, link, text, links) VALUES (?, ?, ?, ?);");
-    statement = cass_statement_new(query.c_str(), 4);
+    query.append(" (timestamp, link, text, ip, links) VALUES (?, ?, ?, ?, ?);");
+    statement = cass_statement_new(query.c_str(), 5);
 
-    cass_statement_bind_int64(statement, 0, model.getTimestamp());
-    cass_statement_bind_string(statement, 1, model.getLink().c_str());
-    cass_statement_bind_string(statement, 2, model.getText().c_str());
+    cass_statement_bind_int64(statement, 0, model.get_timestamp());
+    cass_statement_bind_string(statement, 1, model.get_link().c_str());
+    cass_statement_bind_string(statement, 2, model.get_text().c_str());
+    CassInet inet;
 
-    links = cass_collection_new(CASS_COLLECTION_TYPE_SET, model.getLinks().size());
-    for (std::string l: model.getLinks()) {
+    cass_inet_from_string(model.get_ip().c_str(), &inet);
+    cass_statement_bind_inet(statement, 3, inet);
+
+    links = cass_collection_new(CASS_COLLECTION_TYPE_SET, model.get_links().size());
+    for (std::string l: model.get_links()) {
         cass_collection_append_string(links, l.c_str());
     }
 
-    cass_statement_bind_collection(statement, 3, links);
+    cass_statement_bind_collection(statement, 4, links);
     cass_collection_free(links);
 
     future = cass_session_execute(this->session, statement);
@@ -85,7 +89,7 @@ CassError DataManager::insert_model(const Model& model) {
 }
 
 Model* DataManager::select_model(Model& model) {
-    std::string s(model.getLink());
+    std::string s(model.get_link());
     return this->select_model(s);
 }
 
@@ -93,7 +97,7 @@ Model* DataManager::select_model(std::string& link) {
     CassError rc = CASS_OK;
     CassStatement* statement = NULL;
     CassFuture* future = NULL;
-    std::string query = "SELECT * FROM ";
+    std::string query = "SELECT timestamp, link, text FROM ";
     query.append(this->db);
     query.append(".");
     query.append(this->table);
@@ -124,6 +128,7 @@ Model* DataManager::select_model(std::string& link) {
             cass_value_get_int64(cass_row_get_column_by_name(row, "timestamp"), &qtimestamp);
             cass_value_get_string(cass_row_get_column_by_name(row, "link"), &qlink, &qlink_size);
             cass_value_get_string(cass_row_get_column_by_name(row, "text"), &qtext, &qtext_size);
+
             std::set<std::string> s;
 
             cass_result_free(result);
@@ -131,7 +136,7 @@ Model* DataManager::select_model(std::string& link) {
             cass_future_free(future);
             cass_statement_free(statement);
 
-            return new Model(qtimestamp, std::string(qlink), std::string(qtext), "", s);
+            return new Model(qtimestamp, std::string(qlink), std::string(qtext), "", "", s);
 
         }
 

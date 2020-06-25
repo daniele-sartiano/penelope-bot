@@ -53,7 +53,7 @@ public:
         q.append(this->db);
         q.append(".");
         q.append(this->table);
-        q.append(" (timestamp bigint, link text, text text, links set<text>, PRIMARY KEY (link));");
+        q.append(" (timestamp bigint, link text, text text, ip inet, links set<text>, PRIMARY KEY (link));");
 
         this->query(q);
     }

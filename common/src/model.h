@@ -21,19 +21,22 @@ private:
     static constexpr const char *KEY_LINK = "link";
     static constexpr const char *KEY_TEXT = "text";
     static constexpr const char *KEY_FILENAME = "filename";
+    static constexpr const char *KEY_IP = "ip";
     static constexpr const char *KEY_MODELS = "models";
 
     long timestamp = 0;
     std::string link = "";
     std::string text = "";
     std::string filename = "";
+    std::string ip = "";
     std::set<std::string> links;
 
 public:
 
-    Model(int timestamp, std::string link, std::string text, std::string filename,
+    Model(int timestamp, std::string link, std::string text, std::string filename, std::string ip,
           std::set<std::string> links) : timestamp(timestamp), link(std::move(link)), text(std::move(text)),
                                          filename(std::move(filename)),
+                                         ip(std::move(ip)),
                                          links(std::move(links)) {}
 
     explicit Model(const std::string &serialized) {
@@ -41,7 +44,8 @@ public:
         Value v;
         d.Parse(serialized.c_str());
 
-        for (std::string k: {Model::KEY_TIMESTAMP, Model::KEY_LINK, Model::KEY_TEXT, Model::KEY_FILENAME, Model::KEY_LINKS}) {
+        for (std::string k: {Model::KEY_TIMESTAMP, Model::KEY_LINK, Model::KEY_TEXT, Model::KEY_FILENAME, Model::KEY_IP,
+                             Model::KEY_LINKS}) {
             if (d.HasMember(k.c_str())) {
                 v = d[k.c_str()];
                 if (k == Model::KEY_TIMESTAMP) {
@@ -52,6 +56,8 @@ public:
                     this->text = v.GetString();
                 } else if (k == Model::KEY_FILENAME) {
                     this->filename = v.GetString();
+                } else if (k == Model::KEY_IP) {
+                    this->ip = v.GetString();
                 } else if (k == Model::KEY_LINKS && v.IsArray()) {
                     for (SizeType i = 0; i < v.Size(); i++) {
                         this->links.insert(v[i].GetString());
@@ -63,35 +69,42 @@ public:
     }
 
     static std::vector<Model> deserialize_models(const std::string &serialized);
+
     static std::string serialize_models(std::vector<Model>);
 
-    void setTimestamp(int timestamp);
+    void set_timestamp(long timestamp);
 
-    void setLink(const std::string &link);
+    void set_link(const std::string &link);
 
-    void setText(const std::string &text);
+    void set_text(const std::string &text);
 
-    void setFilename(const std::string &filename);
+    void set_filename(const std::string &filename);
 
-    void setLinks(const std::set<std::string> &links);
+    void set_ip(const std::string &ip);
 
-    const std::string &getFilename() const {
+    void set_links(const std::set<std::string> &links);
+
+    const std::string &get_ip() const {
+        return ip;
+    }
+
+    const std::string &get_filename() const {
         return filename;
     }
 
-    const std::set<std::string> &getLinks() const {
+    const std::set<std::string> &get_links() const {
         return links;
     }
 
-    long getTimestamp() const {
+    long get_timestamp() const {
         return timestamp;
     }
 
-    const std::string &getLink() const {
+    const std::string &get_link() const {
         return link;
     }
 
-    const std::string &getText() const {
+    const std::string &get_text() const {
         return text;
     };
 
