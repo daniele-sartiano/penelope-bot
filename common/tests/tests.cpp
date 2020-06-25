@@ -11,15 +11,15 @@ protected:
         std::set<std::string> s;
         s.insert("www.other.it");
         s.insert("www.another.it");
-        m = new Model(1590162776, "www.test.it", "the text of the page", "page.www.test.it.out", s);
+        m = new Model(1590162776, "www.test.it", "the text of the page", "page.www.test.it.out", "191.162.1.1", s);
     }
 
     Model* m{};
 };
 
 TEST_F(ModelTest, CheckFields) {
-    EXPECT_EQ(m->getLink(), "www.test.it");
-    EXPECT_EQ(m->getText(), "the text of the page");
+    EXPECT_EQ(m->get_link(), "www.test.it");
+    EXPECT_EQ(m->get_text(), "the text of the page");
 }
 
 
@@ -32,10 +32,9 @@ TEST_F(ModelTest, CheckMultipleSerDes) {
     s3.append(s2);
     s3.append("]}");
     std::vector<Model> models = Model::deserialize_models(s3);
-    std::cout << s3 << std::endl;
     EXPECT_EQ(models.size(), 2);
     Model m1 = models.front();
-    EXPECT_EQ(m1.getLink(), m->getLink());
+    EXPECT_EQ(m1.get_link(), m->get_link());
     std::string s4 = Model::serialize_models(models);
     EXPECT_EQ(s4, s3);
 }
