@@ -36,6 +36,15 @@ services:
   #   ports:
   #     - "3000:3000"
 
+  jsdownloader:
+    build: jsdownloader
+    depends_on:
+      - nats
+      - nats-1
+      - nats-2
+      - scylla-manager
+      - data-manager
+
   downloader:
     build: downloader
     depends_on:
@@ -44,8 +53,8 @@ services:
       - nats-2
       - scylla-manager
     environment:
-      - DOWNLOADER_SUBJECT=downloader
-      - DOWNLOADER_QUEUE=qdownloader
+      - DOWNLOADER_SUBJECT=downloader2
+      - DOWNLOADER_QUEUE=qdownloader2
       - DOWNLOAD_DIRECTORY=/data
       - PARSER_SUBJECT=parser
       - NATS_URI=nats://nats:4222
