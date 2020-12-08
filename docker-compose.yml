@@ -53,8 +53,8 @@ services:
       - nats-2
       - scylla-manager
     environment:
-      - DOWNLOADER_SUBJECT=downloader2
-      - DOWNLOADER_QUEUE=qdownloader2
+      - DOWNLOADER_SUBJECT=downloader
+      - DOWNLOADER_QUEUE=qdownloader
       - DOWNLOAD_DIRECTORY=/data
       - PARSER_SUBJECT=parser
       - NATS_URI=nats://nats:4222
@@ -107,6 +107,7 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    restart: "on-failure"
 
   scylla-monitoring:
     image: scylladb/scylla-monitoring:metrics-server
@@ -129,36 +130,6 @@ services:
     container_name: scylla-manager-db
     ports:
       - 9042:9042
-
-  scylla-manager-db2:
-    image: scylladb/scylla
-    container_name: scylla-manager-db2
-    command: --seeds=scylla-manager-db
-
-  scylla-manager-db3:
-    image: scylladb/scylla
-    container_name: scylla-manager-db3
-    command: --seeds=scylla-manager-db
-
-  scylla-manager-db4:
-    image: scylladb/scylla
-    container_name: scylla-manager-db4
-    command: --seeds=scylla-manager-db
-
-  scylla-manager-db5:
-    image: scylladb/scylla
-    container_name: scylla-manager-db5
-    command: --seeds=scylla-manager-db
-
-  scylla-manager-db6:
-    image: scylladb/scylla
-    container_name: scylla-manager-db6
-    command: --seeds=scylla-manager-db
-
-  scylla-manager-db7:
-    image: scylladb/scylla
-    container_name: scylla-manager-db7
-    command: --seeds=scylla-manager-db
 
 
 volumes:

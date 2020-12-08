@@ -64,6 +64,7 @@ public:
     CassError insert_model(const Model& model);
     Model* select_model(Model& model);
     Model* select_model(std::string& link);
+    std::vector<Model> select_models();
 };
 
 

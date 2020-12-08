@@ -26,16 +26,20 @@ class Downloader:
         print(t)
         await page.setViewport({ 'width': 1366, 'height': 768})
         #await page.emulateMedia('screen')
-        await page.pdf({'path': '{}.pdf'.format('a')})
-        await page.screenshot({'path': '{}.png'.format('a'), 'fullPage': True})
+
+        name = url.split('.')[-2]
+
+        await page.pdf({'path': '{}.pdf'.format(name)})
+        await page.screenshot({'path': '{}.png'.format(name), 'fullPage': True})
         print(await page.metrics())
+
 
 async def main():
     #loop = asyncio.get_event_loop()
     browser = await launch()
     d = Downloader(browser)
     #urls = ['https://www.repubblica.it', 'https://www.unipi.it', 'https://www.sartiano.info']
-    urls = ['https://www.sartiano.info', 'http://pc-sartiano.iit.cnr.it:5000/']
+    urls = ['https://www.sartiano.info', 'http://www.repubblica.it/']
     await asyncio.gather(*[d.download(url) for url in urls])
     #await asyncio.gather(*[sleep_print(url) for url in urls])
 

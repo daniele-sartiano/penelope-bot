@@ -1,15 +1,14 @@
-#!/usr/bin/env python
-
-# pip install asyncio-nats-client
-
-import json
 import asyncio
 from datetime import datetime
+
 from nats.aio.client import Client as NATS
 from nats.aio.errors import ErrConnectionClosed, ErrTimeout, ErrNoServers
 
+from datamanager.datamanager import *
 
 async def run(loop):
+
+    dm = DataManager(['localhost'])
 
     nc = NATS()
 
@@ -25,18 +24,24 @@ async def run(loop):
                      max_reconnect_attempts=-1,
                      loop=loop)
 
-    #for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
-    for urls in [["https://www.unipi.it", "https://www.sartiano.info", "https://www.corriere.it"]]:
-        models = []
-        for url in urls:
-            models.append({"link": url, "timestamp": 0})
-        msg = {"models": models}
-        print(msg)
-        await nc.publish("downloader", json.dumps(msg).encode('UTF-8'))
+    async def message_handler(msg):
+        subject = msg.subject
+        reply = msg.reply
+        models = dm.deserialize(msg.data.decode())['models']
+        
+        for m in models:
+            # ['timestamp', 'link', 'text', 'filename', 'ip', '
+            print('{} - {} links'.format(m['link'], len(m['links'])))
+            dm.insert(m)
 
-    await nc.close()
+            d = dm.get_models_to_download(m)
+            print('sending', d)
+            await nc.publish('downloader', d)
+
+    await nc.subscribe("data-manager", "qdata-manager", cb=message_handler)
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(loop))
+    loop.run_forever()
     loop.close()

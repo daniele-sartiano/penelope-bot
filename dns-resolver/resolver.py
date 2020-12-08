@@ -1,10 +1,12 @@
 import asyncio
 import socket
-
 import pycares
+import json
+from functools import partial
+from nats.aio.client import Client as NATS
 
 
-class DNSResolver(object):
+class DNSResolver:
     EVENT_READ = 0
     EVENT_WRITE = 1
 
@@ -53,6 +55,14 @@ class DNSResolver(object):
 
 
 async def run(loop):
+    resolver = DNSResolver(loop)
+
+    async def disconnected_cb():
+        print("Got disconnected...")
+
+    async def reconnected_cb():
+        print("Got reconnected...")
+
     nc = NATS()
     await nc.connect("nats://ruser:T0pS3cr3t@127.0.0.1:4222",
                      reconnected_cb=reconnected_cb,
@@ -60,23 +70,29 @@ async def run(loop):
                      max_reconnect_attempts=-1,
                      loop=loop)
 
-        async def message_handler(msg):
+    # def cb(model, result, error):
+    def mcb(a, b, c):
+        print(a)
+        print(b)
+        print(c)
+        # print(model, result.name, result.addresses, result.aliases)
+
+    async def message_handler(msg):
         try:
             subject = msg.subject
             reply = msg.reply
             data = json.loads(msg.data.decode())
-        
+
             print("Received a message on '{subject} {reply}': {data}".format(
-            subject=subject, reply=reply, data=data))
-            # await nc.publish("downloader", json.dumps(msg).encode('UTF-8'))
-            #{"models": [{"link": "www.unipi.it", "timestamp": 0}, {"link": "www.sartiano.info", "timestamp": 0}, {"link": "www.corriere.it", "timestamp": 0}]}
-            for el in data['models']:
-                await downloader.download(el['link'])
+                subject=subject, reply=reply, data=data))
+            for model in data['models']:
+                f = partial(mcb, model)
+                resolver.gethostbyname(model['link'], f)
 
         except Exception as e:
             print(e)
-                
-    await nc.subscribe("downloader", cb=message_handler)
+
+    await nc.subscribe("resolver", cb=message_handler)
 
 
 if __name__ == '__main__':
@@ -87,11 +103,18 @@ if __name__ == '__main__':
 
 
 def main():
+    def cb_gethostbyname(result, error):
+        print(result.name, result.addresses, result.aliases)
+
     def cb(result, error):
         print("Result: {}, Error: {}".format(result, error))
+
     loop = asyncio.get_event_loop()
     resolver = DNSResolver(loop)
     resolver.query('google.com', pycares.QUERY_TYPE_A, cb)
     resolver.query('sip2sip.info', pycares.QUERY_TYPE_SOA, cb)
     resolver.gethostbyname('apple.com', cb)
     loop.run_forever()
+
+# if __name__ == '__main__':
+#     main()

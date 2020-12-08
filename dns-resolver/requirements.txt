@@ -1,2 +1,4 @@
 asyncio
 pycares
+asyncio-nats-client
+
