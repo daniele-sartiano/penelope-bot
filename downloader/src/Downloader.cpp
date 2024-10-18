@@ -50,6 +50,7 @@ std::string Downloader::download(std::string &directory) {
     std::vector<Model> downloader_models;
 
     for (auto m:this->models) {
+        const clock_t begin_time = clock();
         CURL *curl;
         long filetime = -1;
         std::hash<std::string> hasher;
@@ -102,6 +103,7 @@ std::string Downloader::download(std::string &directory) {
         m.set_filename(file_name);
         m.set_ip(ip);
         downloader_models.push_back(m);
+        std::cout << "\tTime: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " " << m.get_link().c_str() << std::endl;
     }
     this->models.clear();
     this->models = downloader_models;

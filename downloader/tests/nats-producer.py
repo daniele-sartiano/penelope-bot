@@ -26,7 +26,7 @@ async def run(loop):
                      loop=loop)
 
     #for url in ["www.corriere.it", "www.repubblica.it", "www.sartiano.info", "www.unipi.it"]:
-    for urls in [["www.unipi.it", "www.sartiano.info", "www.corriere.it"]]:
+    for urls in [["https://www.unipi.it", "https://www.sartiano.info", "https://www.corriere.it", "https://www.repubblica.it", "https://www.github.com", "https://news.google.com"]]:
         models = []
         for url in urls:
             models.append({"link": url, "timestamp": 0})

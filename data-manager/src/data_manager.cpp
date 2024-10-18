@@ -93,6 +93,60 @@ Model* DataManager::select_model(Model& model) {
     return this->select_model(s);
 }
 
+std::vector<Model> DataManager::select_models() {
+    std::vector<Model> models;
+
+    CassError rc;
+    CassStatement* statement = nullptr;
+    CassFuture* future = nullptr;
+    CassCollection* links = nullptr;
+
+    std::string query = "SELECT links FROM ";
+    query.append(this->db);
+    query.append(".");
+    query.append(this->table);
+    statement = cass_statement_new(query.c_str(), 0);
+
+    if (cass_future_error_code(future) == CASS_OK) {
+        /* Retrieve result set and get the first row */
+        const CassResult* result = cass_future_get_result(future);
+        CassIterator* iterator = cass_iterator_from_result(result);
+
+        while (cass_iterator_next(iterator)) {
+            const CassValue* value = nullptr;
+            CassIterator* items_iterator = nullptr;
+            const CassRow* row = cass_iterator_get_row(iterator);
+
+            value = cass_row_get_column(row, 0);
+            items_iterator = cass_iterator_from_collection(value);
+
+            while (cass_iterator_next(items_iterator)) {
+                const char* link;
+                size_t link_length;
+                cass_value_get_string(cass_iterator_get_value(items_iterator), &link, &link_length);
+                printf("link: %.*s\n", (int)link_length, link);
+                std::set<std::string> s;
+                Model m_out(0, link, "", "", "", s);
+                models.push_back(m_out);
+            }
+            cass_iterator_free(items_iterator);
+        }
+
+        cass_result_free(result);
+        cass_iterator_free(iterator);
+    } else {
+        /* Handle error */
+        const char* message;
+        size_t message_length;
+        cass_future_error_message(future, &message, &message_length);
+        fprintf(stderr, "Unable to run query: '%.*s'\n", (int)message_length, message);
+    }
+
+    cass_future_free(future);
+    cass_statement_free(statement);
+
+}
+
 Model* DataManager::select_model(std::string& link) {
     CassError rc = CASS_OK;
     CassStatement* statement = NULL;
