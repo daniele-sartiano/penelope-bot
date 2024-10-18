@@ -30,7 +30,7 @@ class Downloader:
             l = await page.evaluate('(element) => element.href', el)
             print(i, url, l)
         t = await page.plainText()
-        # add a classifier able for detecting how much wait
+        # add a classifier able for detecting the best time to wait
         await page.waitFor(3000)
         msg = await page.content()
 
