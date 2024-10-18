@@ -1,4 +1,3 @@
-#include <hiredis/hiredis.h>
 #include "src/Downloader.h"
 
 #include <natscommunication.h>
@@ -31,7 +30,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
 
     // Need to destroy the message!
     natsMsg_Destroy(msg);
-    std::cout << "Time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
+    std::cout << d.get_models().size() << " time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 }
 
 void* listen(void *thid) {
