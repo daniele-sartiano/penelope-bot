@@ -18,7 +18,7 @@ static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void 
     producer->send(data_manager_subject, v);
     counter++;
 
-    if (counter % 10 == 0) {
+    if (counter % 50 == 0) {
         std::cout << "Received " << counter << " messages" << std::endl;
     }
 

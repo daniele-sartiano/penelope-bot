@@ -74,6 +74,7 @@ std::string Parser::parse() {
 
     std::vector<Model> parser_models;
 
+    std::cout << "Elaborating " << this->models.size() << " models" << std::endl;
     for (auto m: this->models) {
         std::string url = m.get_link();
         std::string filename = m.get_filename();
@@ -103,8 +104,8 @@ std::string Parser::parse() {
         if(remove( filename.c_str()) != 0) {
             std::cerr <<  "Error deleting file " << filename << std::endl;
         }
-
         parser_models.push_back(m);
+        std::cout << "Done " << filename << std::endl;
     }
 
     this->models.clear();
