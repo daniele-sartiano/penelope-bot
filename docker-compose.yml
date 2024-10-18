@@ -43,10 +43,73 @@ services:
       - nats-1
       - nats-2
       - scylla-manager
-      - data-manager
+      - python-data-manager
 
-  downloader:
-    build: downloader
+#  downloader:
+#    build: downloader
+#    depends_on:
+#      - nats
+#      - nats-1
+#      - nats-2
+#      - scylla-manager
+#    environment:
+#      - DOWNLOADER_SUBJECT=downloader
+#      - DOWNLOADER_QUEUE=qdownloader
+#      - DOWNLOAD_DIRECTORY=/data
+#      - PARSER_SUBJECT=parser
+#      - NATS_URI=nats://nats:4222
+#    volumes:
+#      - output_data:/data
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "200k"
+#        max-file: "10"
+
+  parser:
+    build: parser
+    depends_on:
+      - nats
+      - nats-1
+      - nats-2
+      - scylla-manager
+    environment:
+      - PARSER_SUBJECT=parser
+      - PARSER_QUEUE=qparser
+      - NATS_URI=nats://nats:4222
+      - DATA_MANAGER_SUBJECT=data-manager
+    volumes:
+      - output_data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+#  data-manager:
+#    build: data-manager
+#    depends_on:
+#      - nats
+#      - nats-1
+#      - nats-2
+#      - scylla-manager
+#    environment:
+#      - DOWNLOADER_SUBJECT=downloader
+#      - DATA_MANAGER_SUBJECT=data-manager
+#      - DATA_MANAGER_QUEUE=qdata-manager
+#      - NATS_URI=nats://nats:4222
+#      - SCYLLADB=scylla-manager-db
+#    volumes:
+#      - output_data:/data
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "200k"
+#        max-file: "10"
+#    restart: "on-failure"
+
+  python-downloader:
+    build: python-downloader
     depends_on:
       - nats
       - nats-1
@@ -66,29 +129,8 @@ services:
         max-size: "200k"
         max-file: "10"
 
-  parser:
-    build: parser
-    depends_on:
-      - nats
-      - nats-1
-      - nats-2
-      - scylla-manager
-    environment:
-      - DOWNLOADER_SUBJECT=downloader
-      - DOWNLOADER_QUEUE=qdownloader
-      - PARSER_SUBJECT=parser
-      - PARSER_QUEUE=qparser
-      - NATS_URI=nats://nats:4222
-    volumes:
-      - output_data:/data
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
-
-  data-manager:
-    build: data-manager
+  python-data-manager:
+    build: python-data-manager
     depends_on:
       - nats
       - nats-1
@@ -100,13 +142,6 @@ services:
       - DATA_MANAGER_QUEUE=qdata-manager
       - NATS_URI=nats://nats:4222
       - SCYLLADB=scylla-manager-db
-    volumes:
-      - output_data:/data
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
     restart: "on-failure"
 
   scylla-monitoring:
