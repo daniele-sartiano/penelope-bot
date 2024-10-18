@@ -1,14 +1,13 @@
 import asyncio
-from datetime import datetime
+import os
+import sys
 
 from nats.aio.client import Client as NATS
-from nats.aio.errors import ErrConnectionClosed, ErrTimeout, ErrNoServers
-
 from datamanager.datamanager import *
 
-async def run(loop):
 
-    dm = DataManager(['localhost'])
+async def run(loop):
+    dm = DataManager([os.getenv('SCYLLADB')])
 
     nc = NATS()
 
@@ -18,7 +17,7 @@ async def run(loop):
     async def reconnected_cb():
         print("Got reconnected...")
 
-    await nc.connect("nats://ruser:T0pS3cr3t@127.0.0.1:4222",
+    await nc.connect(os.getenv('NATS_URI'), #"nats://ruser:T0pS3cr3t@127.0.0.1:4222",
                      reconnected_cb=reconnected_cb,
                      disconnected_cb=disconnected_cb,
                      max_reconnect_attempts=-1,
@@ -30,15 +29,15 @@ async def run(loop):
         models = dm.deserialize(msg.data.decode())['models']
         
         for m in models:
-            # ['timestamp', 'link', 'text', 'filename', 'ip', '
+            # ['timestamp', 'link', 'text', 'filename', 'ip', 'links']
             print('{} - {} links'.format(m['link'], len(m['links'])))
             dm.insert(m)
 
-            d = dm.get_models_to_download(m)
-            print('sending', d)
-            await nc.publish('downloader', d)
+            for d in dm.get_models_to_download(m, threshold=50):
+                print('sending', file=sys.stderr)
+                await nc.publish(os.getenv('DOWNLOADER_SUBJECT'), d)
 
-    await nc.subscribe("data-manager", "qdata-manager", cb=message_handler)
+    await nc.subscribe(os.getenv('DATA_MANAGER_SUBJECT'), os.getenv('DATA_MANAGER_QUEUE'), cb=message_handler)
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()

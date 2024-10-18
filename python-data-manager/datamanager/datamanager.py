@@ -1,5 +1,4 @@
 import orjson
-
 from cassandra.io.libevreactor import LibevConnection
 from cassandra.cluster import Cluster
 
@@ -23,27 +22,25 @@ class DataManager:
     def deserialize(obj):
         return orjson.loads(obj)
 
-
     def insert(self, obj):
         insert_obj_query = 'INSERT INTO {}.{} (timestamp, link, text, ip, links) VALUES (%(timestamp)s, %(link)s, %(text)s, %(ip)s, %(links)s)'.format(self.KEYSPACE, self.TABLE)
-
         obj['links'] = set(obj['links'])
-        
         self.session.execute(insert_obj_query, obj)
-
 
     def get_model(self, link):
         query = 'SELECT count(*) FROM {}.{} WHERE link=%s'.format(self.KEYSPACE, self.TABLE)
         r = self.session.execute(query, [link])
         return {'timestamp': 0, 'link': link, 'text': '', 'filename': '', 'ip': '', 'links': []} if r[0].count == 0 else None
-            
-        
-    def get_models_to_download(self, m):
+
+    def get_models_to_download(self, m, threshold=10):
         models = []
-        for l in m['links']:
-            m = self.get_model(l)
+        for link in m['links']:
+            m = self.get_model(link)
             if m is not None:
                 models.append(m)
-
-        return orjson.dumps({'models': models})
+            if len(models) == threshold:
+                yield orjson.dumps({'models': models})
+                models = []
+        if models:
+            yield orjson.dumps({'models': models})
 
