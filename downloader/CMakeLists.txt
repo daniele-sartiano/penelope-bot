@@ -33,7 +33,7 @@ ExternalProject_Add(
         NatsCClient
 
         GIT_REPOSITORY "https://github.com/nats-io/nats.c.git"
-        GIT_TAG "master"
+        GIT_TAG "main"
 
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
