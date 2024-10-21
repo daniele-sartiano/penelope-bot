@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV TZ=Europe/Rome DEBIAN_FRONTEND=noninteractive
 
@@ -11,4 +11,5 @@ ADD . .
 RUN mkdir -p build && cd build && cmake .. && make && cd ../ && ldconfig
 
 CMD ["/app/build/output/downloader"]
+#CMD ["tail", "-f", "/dev/null"]
 

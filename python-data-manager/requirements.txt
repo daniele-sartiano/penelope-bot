@@ -2,5 +2,5 @@ scylla-driver
 lz4
 cython
 scales
-asyncio-nats-client
+nats-py
 orjson
