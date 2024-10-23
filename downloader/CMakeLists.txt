@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
@@ -33,7 +33,7 @@ ExternalProject_Add(
         NatsCClient
 
         GIT_REPOSITORY "https://github.com/nats-io/nats.c.git"
-        GIT_TAG "master"
+        GIT_TAG "main"
 
         UPDATE_COMMAND ""
         PATCH_COMMAND ""

@@ -1,0 +1,6 @@
+scylla-driver
+lz4
+cython
+scales
+nats-py
+orjson
