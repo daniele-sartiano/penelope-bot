@@ -1,1 +1,1 @@
-asyncio-nats-client
+nats-py

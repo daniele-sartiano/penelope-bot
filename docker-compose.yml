@@ -14,28 +14,6 @@ services:
     image: nats
     command: "--cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222"
 
-  # prometheus-nats-exporter:
-  #   image: synadia/prometheus-nats-exporter
-  #   hostname: prometheus-nats-exporter
-  #   command: "-connz -varz -channelz -serverz -subz http://127.0.0.1:8222"
-  #   restart: unless-stopped
-  #   ports:
-  #     - "7777:7777"
-
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   hostname: prometheus
-  #   volumes:
-  #     - "./prometheus.yml:/etc/prometheus/prometheus.yml"
-  #   ports:
-  #     - "9090:9090"
-
-  # grafana:
-  #   image: grafana/grafana
-  #   hostname: grafana
-  #   ports:
-  #     - "3000:3000"
-
   jsdownloader:
     build: jsdownloader
     depends_on:
@@ -45,26 +23,26 @@ services:
       - scylla-manager
       - python-data-manager
 
-#  downloader:
-#    build: downloader
-#    depends_on:
-#      - nats
-#      - nats-1
-#      - nats-2
-#      - scylla-manager
-#    environment:
-#      - DOWNLOADER_SUBJECT=downloader
-#      - DOWNLOADER_QUEUE=qdownloader
-#      - DOWNLOAD_DIRECTORY=/data
-#      - PARSER_SUBJECT=parser
-#      - NATS_URI=nats://nats:4222
-#    volumes:
-#      - output_data:/data
-#    logging:
-#      driver: "json-file"
-#      options:
-#        max-size: "200k"
-#        max-file: "10"
+  downloader:
+    build: downloader
+    depends_on:
+      - nats
+      - nats-1
+      - nats-2
+      - scylla-manager
+    environment:
+      - DOWNLOADER_SUBJECT=downloader
+      - DOWNLOADER_QUEUE=qdownloader
+      - DOWNLOAD_DIRECTORY=/data
+      - PARSER_SUBJECT=parser
+      - NATS_URI=nats://nats:4222
+    volumes:
+      - output_data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
 
   parser:
     build: parser
@@ -108,26 +86,26 @@ services:
 #        max-file: "10"
 #    restart: "on-failure"
 
-  python-downloader:
-    build: python-downloader
-    depends_on:
-      - nats
-      - nats-1
-      - nats-2
-      - scylla-manager
-    environment:
-      - DOWNLOADER_SUBJECT=downloader
-      - DOWNLOADER_QUEUE=qdownloader
-      - DOWNLOAD_DIRECTORY=/data
-      - PARSER_SUBJECT=parser
-      - NATS_URI=nats://nats:4222
-    volumes:
-      - output_data:/data
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
+  # python-downloader:
+  #   build: python-downloader
+  #   depends_on:
+  #     - nats
+  #     - nats-1
+  #     - nats-2
+  #     - scylla-manager
+  #   environment:
+  #     - DOWNLOADER_SUBJECT=downloader
+  #     - DOWNLOADER_QUEUE=qdownloader
+  #     - DOWNLOAD_DIRECTORY=/data
+  #     - PARSER_SUBJECT=parser
+  #     - NATS_URI=nats://nats:4222
+  #   volumes:
+  #     - output_data:/data
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "200k"
+  #       max-file: "10"
 
   python-data-manager:
     build: python-data-manager
@@ -165,7 +143,6 @@ services:
     container_name: scylla-manager-db
     ports:
       - 9042:9042
-
 
 volumes:
   output_data:
