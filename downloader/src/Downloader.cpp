@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include <ctime>
 
 
 size_t Downloader::write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
@@ -52,7 +53,7 @@ std::string Downloader::download(std::string &directory) {
     for (auto m:this->models) {
         const clock_t begin_time = clock();
         CURL *curl;
-        long filetime = -1;
+        long filetime;
         std::hash<std::string> hasher;
         auto hashed = hasher(m.get_link());
 
@@ -79,7 +80,7 @@ std::string Downloader::download(std::string &directory) {
         curl = curl_easy_init();
 
         curl_easy_setopt(curl, CURLOPT_URL, m.get_link().c_str());
-        curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
+        curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
         curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
@@ -91,6 +92,8 @@ std::string Downloader::download(std::string &directory) {
 
         auto res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
 
+        long timestamp = filetime != -1 ? filetime : std::time(nullptr);
+
         char *ip;
         res = curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &ip);
 
@@ -99,11 +102,12 @@ std::string Downloader::download(std::string &directory) {
         curl_easy_cleanup(curl);
         curl_global_cleanup();
         // int timestamp, std::string link, std::string text, std::string filename, std::set<std::string> links
-        m.set_timestamp(filetime);
+        m.set_timestamp(timestamp);
         m.set_filename(file_name);
         m.set_ip(ip);
         downloader_models.push_back(m);
         std::cout << "\tTime: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " " << m.get_link().c_str() << std::endl;
+        std::cout << m.serialize() << std::endl;
     }
     this->models.clear();
     this->models = downloader_models;

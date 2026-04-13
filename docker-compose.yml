@@ -86,8 +86,8 @@ services:
 #        max-file: "10"
 #    restart: "on-failure"
 
-  # python-downloader:
-  #   build: python-downloader
+  # pycurl-downloader:
+  #   build: pycurl-downloader
   #   depends_on:
   #     - nats
   #     - nats-1
