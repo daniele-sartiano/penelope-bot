@@ -2,30 +2,32 @@
 
 #include <natscommunication.h>
 
+#include <cstdlib>
 #include <getopt.h>
 #include <iostream>
 
+static size_t get_max_concurrent() {
+    const char *env = getenv("MAX_CONCURRENT");
+    if (env == nullptr) return Downloader::DEFAULT_MAX_CONCURRENT;
+    long v = std::strtol(env, nullptr, 10);
+    return v > 0 ? static_cast<size_t>(v) : Downloader::DEFAULT_MAX_CONCURRENT;
+}
+
 static void onMsg(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *closure) {
-    /*printf("Received msg: %s - %.*s\n",
-           natsMsg_GetSubject(msg),
-           natsMsg_GetDataLength(msg),
-           natsMsg_GetData(msg));*/
+    auto *producer = static_cast<NatsProducer*>(closure);
 
     std::string directory = getenv("DOWNLOAD_DIRECTORY") != nullptr ? getenv("DOWNLOAD_DIRECTORY") : "/tmp";
-    std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
     std::string parser_subject = getenv("PARSER_SUBJECT") != nullptr ? getenv("PARSER_SUBJECT") : "parser";
 
     const clock_t begin_time = clock();
-    Downloader d(natsMsg_GetData(msg));
+    Downloader d(natsMsg_GetData(msg), get_max_concurrent());
     std::string r = d.download(directory);
 
     if (r.empty()) {
         std::cerr << "Discard " << msg << std::endl;
     } else {
-        auto *producer = new NatsProducer(server);
         std::cout << "Sending msg" << std::endl;
         producer->send(parser_subject, r);
-        delete producer;
     }
 
     // Need to destroy the message!
@@ -40,8 +42,10 @@ void* listen(void *thid) {
     std::string server = getenv("NATS_URI") != nullptr ? getenv("NATS_URI") : "nats://127.0.0.1:4222";
     std::string downloader_subject = getenv("DOWNLOADER_SUBJECT") != nullptr ? getenv("DOWNLOADER_SUBJECT") : "downloader";
     std::string downloader_queue = getenv("DOWNLOADER_QUEUE") != nullptr ? getenv("DOWNLOADER_QUEUE") : "qdownloader";
-    auto *receiver = new NatsReceiver(server);
-    receiver->subscribe(downloader_subject, downloader_queue, onMsg, NULL);
+
+    NatsProducer producer(server);
+    NatsReceiver receiver(server);
+    receiver.subscribe(downloader_subject, downloader_queue, onMsg, static_cast<void*>(&producer));
 }
 
 int main(int argc, char **argv) {

@@ -11,109 +11,128 @@
 #include <ctime>
 
 
-size_t Downloader::write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
-    /*std::ofstream& outstream = *reinterpret_cast<std::ofstream*>(stream);
-    outstream.write((const char*)ptr, size * nmemb);*/
+struct TransferContext {
+    FILE *fp;
+    Model model;
+    std::string filename;
+};
 
-    size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
-    //return size*nmemb;
-    return written;
+
+static size_t write_data_cb(void *ptr, size_t size, size_t nmemb, void *stream) {
+    return fwrite(ptr, size, nmemb, (FILE *)stream);
 }
 
 
-bool Downloader::discard(Model& m) {
-    CURL *curl;
-    CURLcode res;
-    long filetime = -1;
-
-    curl = curl_easy_init();
-
-    curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
-    curl_easy_setopt(curl, CURLOPT_URL, m.get_link().c_str());
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
-    curl_easy_setopt(curl, CURLOPT_NOBODY, 1L );
-    curl_easy_setopt(curl, CURLOPT_HEADER, 0L );
-    curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-
-    res = curl_easy_perform(curl);
-
-    if(CURLE_OK == res) {
-        res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
-        //std::cout << filetime << std::endl;
-        return ((CURLE_OK == res) && filetime > 0 && (m.get_timestamp() >= filetime));
-    }
-    return false;
+static CURL* make_easy_handle(const std::string &url, const std::string &user_agent,
+                              TransferContext *ctx) {
+    CURL *easy = curl_easy_init();
+    curl_easy_setopt(easy, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(easy, CURLOPT_FILETIME, 1L);
+    curl_easy_setopt(easy, CURLOPT_USERAGENT, user_agent.c_str());
+    curl_easy_setopt(easy, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION, write_data_cb);
+    curl_easy_setopt(easy, CURLOPT_WRITEDATA, ctx->fp);
+    curl_easy_setopt(easy, CURLOPT_CONNECTTIMEOUT, 30L);
+    curl_easy_setopt(easy, CURLOPT_TIMEOUT, 300L);
+    curl_easy_setopt(easy, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(easy, CURLOPT_PRIVATE, ctx);
+    return easy;
 }
 
-std::string Downloader::download(std::string &directory) {
-    std::string prefix = !directory.empty() ? directory.append("/") : "";
+
+std::string Downloader::download(const std::string &directory) {
+    std::string prefix = !directory.empty() ? (directory + "/") : "";
     std::vector<Model> downloader_models;
 
-    for (auto m:this->models) {
-        const clock_t begin_time = clock();
-        CURL *curl;
-        long filetime;
+    if (this->models.empty()) {
+        return Model::serialize_models(downloader_models);
+    }
+
+    CURLM *multi = curl_multi_init();
+    size_t next_url = 0;
+    const size_t total = this->models.size();
+
+    auto enqueue_next = [&]() {
+        if (next_url >= total) return;
+        Model &m = this->models[next_url++];
         std::hash<std::string> hasher;
         auto hashed = hasher(m.get_link());
 
-        std::string file_name;
-        file_name.append(prefix);
-        file_name.append("page.");
-        file_name.append(std::to_string(hashed));
-        file_name.append(".out");
+        auto *ctx = new TransferContext{nullptr, m,
+            prefix + "page." + std::to_string(hashed) + ".out"};
 
-        //std::cout << "filename --> " << file_name << std::endl;
-
-        FILE  *pagefile;
-        pagefile = fopen(file_name.c_str(), "wb");
-        if (!pagefile) {
-            std::cerr << "can not create file " << file_name << std::endl;
-            exit(EXIT_FAILURE);
+        ctx->fp = fopen(ctx->filename.c_str(), "wb");
+        if (!ctx->fp) {
+            std::cerr << "cannot create file " << ctx->filename << std::endl;
+            delete ctx;
+            return;
         }
 
-        if (this->discard(m)) {
-            std::cout << "discard " << m.get_link() << std::endl;
-            continue;
-        }
+        CURL *easy = make_easy_handle(m.get_link(), this->USER_AGENT, ctx);
+        curl_multi_add_handle(multi, easy);
+    };
 
-        curl = curl_easy_init();
-
-        curl_easy_setopt(curl, CURLOPT_URL, m.get_link().c_str());
-        curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, this->USER_AGENT.c_str());
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-        //curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out_file);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, pagefile);
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
-
-        curl_easy_perform(curl); /* ignores error */
-
-        auto res = curl_easy_getinfo(curl, CURLINFO_FILETIME, &filetime);
-
-        long timestamp = filetime != -1 ? filetime : std::time(nullptr);
-
-        char *ip;
-        res = curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &ip);
-
-        fclose(pagefile);
-
-        curl_easy_cleanup(curl);
-        curl_global_cleanup();
-        // int timestamp, std::string link, std::string text, std::string filename, std::set<std::string> links
-        m.set_timestamp(timestamp);
-        m.set_filename(file_name);
-        m.set_ip(ip);
-        downloader_models.push_back(m);
-        std::cout << "\tTime: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " " << m.get_link().c_str() << std::endl;
-        std::cout << m.serialize() << std::endl;
+    size_t initial = std::min(this->max_concurrent, total);
+    for (size_t i = 0; i < initial; i++) {
+        enqueue_next();
     }
-    this->models.clear();
-    this->models = downloader_models;
 
+    int still_running = 0;
+    do {
+        CURLMcode mc = curl_multi_perform(multi, &still_running);
+        if (mc != CURLM_OK) {
+            std::cerr << "curl_multi_perform failed: " << curl_multi_strerror(mc) << std::endl;
+            break;
+        }
+
+        if (still_running) {
+            curl_multi_poll(multi, nullptr, 0, 1000, nullptr);
+        }
+
+        CURLMsg *msg;
+        int msgs_left;
+        while ((msg = curl_multi_info_read(multi, &msgs_left))) {
+            if (msg->msg != CURLMSG_DONE) continue;
+
+            CURL *easy = msg->easy_handle;
+            TransferContext *ctx = nullptr;
+            curl_easy_getinfo(easy, CURLINFO_PRIVATE, &ctx);
+
+            if (ctx->fp) {
+                fclose(ctx->fp);
+                ctx->fp = nullptr;
+            }
+
+            if (msg->data.result == CURLE_OK) {
+                long filetime = -1;
+                char *ip = nullptr;
+                curl_easy_getinfo(easy, CURLINFO_FILETIME, &filetime);
+                curl_easy_getinfo(easy, CURLINFO_PRIMARY_IP, &ip);
+
+                long ts = filetime > 0 ? filetime : std::time(nullptr);
+                ctx->model.set_timestamp(ts);
+                ctx->model.set_filename(ctx->filename);
+                ctx->model.set_ip(ip != nullptr ? ip : "");
+                downloader_models.push_back(ctx->model);
+            } else {
+                std::cerr << "download failed for " << ctx->model.get_link() << ": "
+                          << curl_easy_strerror(msg->data.result) << std::endl;
+            }
+
+            curl_multi_remove_handle(multi, easy);
+            curl_easy_cleanup(easy);
+            delete ctx;
+
+            enqueue_next();
+        }
+    } while (still_running || next_url < total);
+
+    curl_multi_cleanup(multi);
+
+    this->models = downloader_models;
     return Model::serialize_models(this->models);
 }
+
 
 std::vector<Model> Downloader::get_models() const {
     return models;

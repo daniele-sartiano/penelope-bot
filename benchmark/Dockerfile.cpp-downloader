@@ -1,0 +1,23 @@
+FROM ubuntu:22.04
+
+ENV TZ=Europe/Rome DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get -y update && apt-get install -y --no-install-recommends \
+        g++ libcurl4-openssl-dev rapidjson-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+
+COPY common/src/ common/src/
+COPY downloader/src/ downloader/src/
+COPY downloader/benchmark_main.cpp downloader/benchmark_main.cpp
+
+RUN g++ -O2 -std=c++14 \
+      -I common/src \
+      common/src/model.cpp \
+      downloader/src/Downloader.cpp \
+      downloader/benchmark_main.cpp \
+      -lcurl \
+      -o /usr/local/bin/benchmark_downloader
+
+CMD ["/usr/local/bin/benchmark_downloader"]

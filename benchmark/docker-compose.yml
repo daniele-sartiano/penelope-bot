@@ -1,0 +1,42 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    environment:
+      SERVER_LATENCY: "${SERVER_LATENCY:-0.05}"
+      SERVER_PORT: "8888"
+
+  pycurl-benchmark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SERVER_URL: "http://server:8888"
+      MAX_CONCURRENT: "${MAX_CONCURRENT:-20}"
+    depends_on:
+      - server
+
+  cpp-benchmark:
+    build:
+      context: ..
+      dockerfile: benchmark/Dockerfile.cpp-downloader
+    environment:
+      SERVER_URL: "http://server:8888"
+      MAX_CONCURRENT: "${MAX_CONCURRENT:-20}"
+      DOWNLOAD_DIRECTORY: "/tmp"
+      SCENARIOS: "10,50,100,200"
+    depends_on:
+      - server
+
+  rust-benchmark:
+    build:
+      context: ..
+      dockerfile: benchmark/Dockerfile.rust-downloader
+    environment:
+      SERVER_URL: "http://server:8888"
+      MAX_CONCURRENT: "${MAX_CONCURRENT:-20}"
+      DOWNLOAD_DIRECTORY: "/tmp"
+      SCENARIOS: "10,50,100,200"
+    depends_on:
+      - server
