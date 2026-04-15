@@ -1,10 +1,9 @@
-FROM ubuntu:18.04
-
-RUN apt -y update && apt install -y python3-pip
+FROM mcr.microsoft.com/playwright/python:v1.58.0-noble
 
 WORKDIR /app
-ADD . .
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip3 install -r requirements.txt
+COPY . .
 
-CMD tail -f /dev/null
+CMD ["python", "main.py"]
